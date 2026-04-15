@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `deliveries` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`orderId` int NOT NULL,\n\t`motoboyId` int,\n\t`status` enum('waiting','accepted','in_route','delivered') NOT NULL DEFAULT 'waiting',\n\t`acceptedAt` timestamp,\n\t`deliveredAt` timestamp,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `deliveries_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `deliveries_orderId_unique` UNIQUE(`orderId`)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 43jnK76S1Rdcxzd.root --database faAWtu22STQMuNwABVCG8Y --execute CREATE TABLE `deliveries` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`orderId` int NOT NULL,\n\t`motoboyId` int,\n\t`status` enum('waiting','accepted','in_route','delivered') NOT NULL DEFAULT 'waiting',\n\t`acceptedAt` timestamp,\n\t`deliveredAt` timestamp,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `deliveries_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `deliveries_orderId_unique` UNIQUE(`orderId`)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2111
+}

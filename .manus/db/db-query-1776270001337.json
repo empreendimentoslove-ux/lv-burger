@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `users` ADD `phone` varchar(20); ALTER TABLE `users` ADD `avatarUrl` text; ALTER TABLE `users` ADD `address` text",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 43jnK76S1Rdcxzd.root --database faAWtu22STQMuNwABVCG8Y --execute ALTER TABLE `users` ADD `phone` varchar(20); ALTER TABLE `users` ADD `avatarUrl` text; ALTER TABLE `users` ADD `address` text",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1189
+}

@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `stock_items` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`name` varchar(100) NOT NULL,\n\t`unit` varchar(20) NOT NULL DEFAULT 'un',\n\t`quantity` decimal(10,2) NOT NULL DEFAULT '0',\n\t`minQuantity` decimal(10,2) NOT NULL DEFAULT '0',\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `stock_items_id` PRIMARY KEY(`id`)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 43jnK76S1Rdcxzd.root --database faAWtu22STQMuNwABVCG8Y --execute CREATE TABLE `stock_items` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`name` varchar(100) NOT NULL,\n\t`unit` varchar(20) NOT NULL DEFAULT 'un',\n\t`quantity` decimal(10,2) NOT NULL DEFAULT '0',\n\t`minQuantity` decimal(10,2) NOT NULL DEFAULT '0',\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `stock_items_id` PRIMARY KEY(`id`)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 439
+}

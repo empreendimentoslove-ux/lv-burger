@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO categories (name, slug, description, sortOrder) VALUES\n('Hambúrgueres', 'hamburgueres', 'Nossos hambúrgueres artesanais', 1),\n('Bebidas', 'bebidas', 'Refrigerantes, sucos e mais', 2),\n('Sobremesas', 'sobremesas', 'Doces e sobremesas', 3),\n('Combos', 'combos', 'Combos completos com desconto', 4)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 43jnK76S1Rdcxzd.root --database faAWtu22STQMuNwABVCG8Y --execute INSERT INTO categories (name, slug, description, sortOrder) VALUES\n('Hambúrgueres', 'hamburgueres', 'Nossos hambúrgueres artesanais', 1),\n('Bebidas', 'bebidas', 'Refrigerantes, sucos e mais', 2),\n('Sobremesas', 'sobremesas', 'Doces e sobremesas', 3),\n('Combos', 'combos', 'Combos completos com desconto', 4)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 374
+}

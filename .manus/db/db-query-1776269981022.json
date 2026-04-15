@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `product_stock` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`productId` int NOT NULL,\n\t`stockItemId` int NOT NULL,\n\t`quantity` decimal(10,2) NOT NULL,\n\tCONSTRAINT `product_stock_id` PRIMARY KEY(`id`)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 43jnK76S1Rdcxzd.root --database faAWtu22STQMuNwABVCG8Y --execute CREATE TABLE `product_stock` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`productId` int NOT NULL,\n\t`stockItemId` int NOT NULL,\n\t`quantity` decimal(10,2) NOT NULL,\n\tCONSTRAINT `product_stock_id` PRIMARY KEY(`id`)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 415
+}
