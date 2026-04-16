@@ -22,10 +22,13 @@ export default function AdminDashboard() {
   const { data: isOpen } = trpc.shop.isOpen.useQuery(undefined, { refetchInterval: 30000 });
   
   const updateSettingsMutation = trpc.shop.updateSettings.useMutation({
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      if (variables.isOpen !== undefined) {
+        setShopOpen(variables.isOpen);
+      }
       utils.shop.settings.invalidate();
       utils.shop.isOpen.invalidate();
-      toast.success("Status da loja atualizado!");
+      toast.success(variables.isOpen ? "Loja aberta!" : "Loja fechada!");
     },
   });
   
