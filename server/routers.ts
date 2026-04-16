@@ -218,6 +218,7 @@ export const appRouter = router({
           subtotal: z.string(),
           deliveryFee: z.string(),
           total: z.string(),
+          proofUrl: z.string().optional(),
           notes: z.string().optional(),
           items: z.array(
             z.object({
@@ -232,6 +233,11 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
+        // Check if shop is open
+        const settings = await getShopSettings();
+        if (!isShopOpen(settings)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Loja fechada no momento. Pedidos não podem ser realizados." });
+        }
         const order = await createOrder({ ...input, userId: ctx.user.id });
         await clearCart(ctx.user.id);
         return order;

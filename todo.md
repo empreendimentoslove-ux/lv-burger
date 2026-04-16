@@ -67,9 +67,9 @@
 
 ## Novos Ajustes (v2)
 
-- [ ] Notificação sonora e visual de novo pedido no painel admin
-- [ ] Horário de funcionamento automático (17h-00h, terça-domingo)
-- [ ] Controle manual de abertura/fechamento da loja
-- [ ] Bloqueio de pedidos quando loja fechada
-- [ ] Localização automática no checkout
-- [ ] Comprovante de pagamento com upload de foto
+- [x] Notificação sonora e visual de novo pedido no painel admin
+- [x] Horário de funcionamento automático (17h-00h, terça-domingo)
+- [x] Controle manual de abertura/fechamento da loja
+- [x] Bloqueio de pedidos quando loja fechada
+- [x] Localização automática no checkout
+- [x] Comprovante de pagamento com upload de foto

@@ -583,14 +583,16 @@ export async function updateShopSettings(data: { isOpen?: boolean; openTime?: st
 export function isShopOpen(settings: any): boolean {
   if (!settings) return true;
   
-  // Check manual override
-  if (!settings.isOpen) return false;
+  // Manual override: if manually closed, always closed
+  if (settings.isOpen === false) return false;
+  
+  // Manual override: if manually open, always open (ignores schedule)
+  if (settings.isOpen === true && settings.manualOverride) return true;
   
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0=domingo, 1=segunda, ..., 6=sábado
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   
-  // Check operating days (1,2,3,4,5,6 = segunda a domingo)
+  // Check operating days (2,3,4,5,6,0 = terça a domingo)
   const operatingDays = settings.operatingDays.split(',').map((d: string) => parseInt(d));
   if (!operatingDays.includes(dayOfWeek)) return false;
   
@@ -601,7 +603,7 @@ export function isShopOpen(settings: any): boolean {
   const closeTimeNum = closeHour * 60 + closeMin;
   const currentTimeNum = now.getHours() * 60 + now.getMinutes();
   
-  // Handle closing after midnight
+  // Handle closing after midnight (00:00)
   if (closeTimeNum < openTimeNum) {
     return currentTimeNum >= openTimeNum || currentTimeNum < closeTimeNum;
   }

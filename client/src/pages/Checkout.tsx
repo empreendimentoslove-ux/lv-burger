@@ -35,10 +35,26 @@ export default function Checkout() {
       
       const { latitude, longitude } = position.coords;
       
-      // Use reverse geocoding (simplified - just show coordinates)
-      const locationText = `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`;
-      setAddress(locationText);
-      toast.success("Localização capturada!");
+      // Try to reverse geocode using Google Maps Geocoder (if available)
+      try {
+        const geocoder = new (window as any).google.maps.Geocoder();
+        const result = await new Promise((resolve, reject) => {
+          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results: any, status: any) => {
+            if (status === "OK" && results[0]) {
+              resolve(results[0].formatted_address);
+            } else {
+              reject(new Error("Geocoding failed"));
+            }
+          });
+        });
+        setAddress(result as string);
+        toast.success("Endereço preenchido!");
+      } catch (geocodeError) {
+        // Fallback: show coordinates if geocoding fails
+        const locationText = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        setAddress(locationText);
+        toast.success("Localização capturada! Digite o endereço completo.");
+      }
     } catch (error) {
       toast.error("Não foi possível obter sua localização");
     } finally {
@@ -83,6 +99,17 @@ export default function Checkout() {
 
     setIsSubmitting(true);
     try {
+      let proofUrl: string | undefined;
+      
+      // Upload proof for Pix payment
+      if (paymentMethod === "pix" && proofImage) {
+        const formData = new FormData();
+        formData.append("file", proofImage);
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        const uploadData = await uploadRes.json();
+        proofUrl = uploadData.url;
+      }
+      
       const order = await createOrder.mutateAsync({
         paymentMethod,
         changeAmount: paymentMethod === "cash" && changeAmount ? changeAmount : undefined,
@@ -90,6 +117,7 @@ export default function Checkout() {
         subtotal: totalPrice.toFixed(2),
         deliveryFee: "0",
         total: totalPrice.toFixed(2),
+        proofUrl,
         items: items.map((item) => ({
           productId: item.productId,
           productName: item.product?.name ?? "",
