@@ -237,6 +237,26 @@ export default function Checkout() {
               )}
             </button>
 
+            {/* Pix Key Display */}
+            {paymentMethod === "pix" && (
+              <div className="bg-[#1a1a1a] border border-[#c0392b]/30 rounded-2xl p-4 mb-4">
+                <p className="text-[#d4af37] font-medium text-sm mb-2">Chave Pix (Telefone)</p>
+                <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-white font-mono text-sm">91987283780</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText("91987283780");
+                      toast.success("Chave Pix copiada!");
+                    }}
+                    className="text-[#c0392b] text-xs font-semibold hover:text-[#d4af37] transition-colors"
+                  >
+                    Copiar
+                  </button>
+                </div>
+                <p className="text-[#666] text-xs mt-3">Faça a transferência para esta chave e envie o comprovante abaixo</p>
+              </div>
+            )}
+
             {/* Pix Proof Upload */}
             {paymentMethod === "pix" && (
               <div className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-4">
