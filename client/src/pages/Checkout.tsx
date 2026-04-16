@@ -24,7 +24,7 @@ export default function Checkout() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createOrder = trpc.orders.create.useMutation();
-  const { data: shopOpen } = trpc.shop.isOpen.useQuery();
+  const { data: shopOpen } = trpc.shop.isOpen.useQuery(undefined, { refetchInterval: 3000 });
 
   const handleGetLocation = async () => {
     setIsLocating(true);

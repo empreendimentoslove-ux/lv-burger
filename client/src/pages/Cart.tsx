@@ -11,7 +11,7 @@ export default function Cart() {
   const [, navigate] = useLocation();
   const { items, totalPrice, updateItem, removeItem, isLoading } = useCart();
   const { user } = useAuth();
-  const { data: shopOpen } = trpc.shop.isOpen.useQuery();
+  const { data: shopOpen } = trpc.shop.isOpen.useQuery(undefined, { refetchInterval: 3000 });
 
   if (isLoading) {
     return (

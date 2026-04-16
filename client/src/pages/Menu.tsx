@@ -20,6 +20,7 @@ export default function Menu() {
   const { data: products } = trpc.products.list.useQuery(
     activeCat ? { categoryId: activeCat } : undefined
   );
+  const { data: shopOpen } = trpc.shop.isOpen.useQuery(undefined, { refetchInterval: 3000 });
   const { addItem, updateItem, items } = useCart();
 
   const filteredProducts = (products ?? []).filter((p) =>
