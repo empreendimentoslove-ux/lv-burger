@@ -3,13 +3,15 @@ import { useLocation } from "wouter";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { BottomNav } from "@/components/BottomNav";
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 export default function Cart() {
   const [, navigate] = useLocation();
   const { items, totalPrice, updateItem, removeItem, isLoading } = useCart();
   const { user } = useAuth();
+  const { data: shopOpen } = trpc.shop.isOpen.useQuery();
 
   if (isLoading) {
     return (
@@ -130,11 +132,18 @@ export default function Cart() {
       {/* CTA */}
       {items.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-[#1a1a1a] p-4">
+          {!shopOpen && (
+            <div className="bg-[#f39c12]/10 border border-[#f39c12]/30 rounded-xl p-3 mb-3 flex items-center gap-2">
+              <AlertCircle size={16} className="text-[#f39c12] flex-shrink-0" />
+              <p className="text-[#f39c12] text-xs">Loja fechada no momento</p>
+            </div>
+          )}
           <button
             onClick={() => navigate("/checkout")}
-            className="w-full max-w-md mx-auto block bg-[#c0392b] text-white py-4 rounded-2xl font-semibold text-base active:scale-95 transition-transform lv-shadow"
+            disabled={!shopOpen}
+            className="w-full max-w-md mx-auto block bg-[#c0392b] text-white py-4 rounded-2xl font-semibold text-base active:scale-95 transition-transform lv-shadow disabled:opacity-60"
           >
-            Finalizar Pedido · R$ {totalPrice.toFixed(2).replace(".", ",")}
+            {shopOpen ? `Finalizar Pedido · R$ ${totalPrice.toFixed(2).replace(".", ",")}` : "Loja Fechada"}
           </button>
         </div>
       )}

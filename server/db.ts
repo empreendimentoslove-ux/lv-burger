@@ -9,6 +9,7 @@ import {
   orders,
   productStock,
   products,
+  shopSettings,
   stockItems,
   users,
 } from "../drizzle/schema";
@@ -562,4 +563,48 @@ export async function getSalesReport(startDate: Date, endDate: Date) {
     .map(([date, v]) => ({ date: date.slice(5), orders: v.orders, revenue: v.revenue }));
 
   return { totalOrders: rawOrders.length, totalRevenue, ordersByDay };
+}
+
+
+// ─── Shop Settings ────────────────────────────────────────────────────────────
+export async function getShopSettings() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(shopSettings).limit(1);
+  return result[0] || null;
+}
+
+export async function updateShopSettings(data: { isOpen?: boolean; openTime?: string; closeTime?: string; operatingDays?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(shopSettings).set(data).where(eq(shopSettings.id, 1));
+}
+
+export function isShopOpen(settings: any): boolean {
+  if (!settings) return true;
+  
+  // Check manual override
+  if (!settings.isOpen) return false;
+  
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=domingo, 1=segunda, ..., 6=sábado
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  
+  // Check operating days (1,2,3,4,5,6 = segunda a domingo)
+  const operatingDays = settings.operatingDays.split(',').map((d: string) => parseInt(d));
+  if (!operatingDays.includes(dayOfWeek)) return false;
+  
+  // Check time range
+  const [openHour, openMin] = settings.openTime.split(':').map(Number);
+  const [closeHour, closeMin] = settings.closeTime.split(':').map(Number);
+  const openTimeNum = openHour * 60 + openMin;
+  const closeTimeNum = closeHour * 60 + closeMin;
+  const currentTimeNum = now.getHours() * 60 + now.getMinutes();
+  
+  // Handle closing after midnight
+  if (closeTimeNum < openTimeNum) {
+    return currentTimeNum >= openTimeNum || currentTimeNum < closeTimeNum;
+  }
+  
+  return currentTimeNum >= openTimeNum && currentTimeNum < closeTimeNum;
 }

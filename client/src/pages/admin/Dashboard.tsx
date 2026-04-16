@@ -1,16 +1,52 @@
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
+import { playNotificationSound, showNotification, requestNotificationPermission } from "@/utils/notificationManager";
 import {
   ShoppingBag, Users, Package, TrendingUp, ChevronRight,
-  BarChart2, LogOut, Layers, Truck, ClipboardList
+  BarChart2, LogOut, Layers, Truck, ClipboardList, Power, AlertCircle
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const [, navigate] = useLocation();
-  const { data: report } = trpc.reports.daily.useQuery();
-  const { data: recentOrders } = trpc.orders.listAll.useQuery();
+  const utils = trpc.useUtils();
+  const [lastOrderCount, setLastOrderCount] = useState(0);
+  const [shopOpen, setShopOpen] = useState(true);
+  
+  const { data: report, refetch: refetchReport } = trpc.reports.daily.useQuery();
+  const { data: recentOrders } = trpc.orders.listAll.useQuery(undefined, { refetchInterval: 5000 });
+  const { data: shopSettings } = trpc.shop.settings.useQuery();
+  const { data: isOpen } = trpc.shop.isOpen.useQuery(undefined, { refetchInterval: 30000 });
+  
+  const updateSettingsMutation = trpc.shop.updateSettings.useMutation({
+    onSuccess: () => {
+      utils.shop.settings.invalidate();
+      utils.shop.isOpen.invalidate();
+      toast.success("Status da loja atualizado!");
+    },
+  });
+  
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+  
+  // Monitor for new orders
+  useEffect(() => {
+    const currentCount = (recentOrders ?? []).filter((o: any) => o.status === 'pending_payment' || o.status === 'confirmed').length;
+    if (currentCount > lastOrderCount) {
+      playNotificationSound();
+      showNotification('🍔 Novo Pedido!', `Você tem ${currentCount} pedido(s) aguardando`);
+    }
+    setLastOrderCount(currentCount);
+  }, [recentOrders, lastOrderCount]);
+  
+  useEffect(() => {
+    setShopOpen(isOpen ?? true);
+  }, [isOpen]);
 
   const STATUS_COLORS: Record<string, string> = {
     pending_payment: "text-[#f39c12]",
@@ -61,6 +97,45 @@ export default function AdminDashboard() {
       </div>
 
       <div className="px-4 py-4 flex flex-col gap-4">
+        {/* Shop Status Alert */}
+        {!shopOpen && (
+          <div className="bg-[#f39c12]/10 border border-[#f39c12]/30 rounded-2xl p-4 flex items-center gap-3">
+            <AlertCircle size={20} className="text-[#f39c12] flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-[#f39c12] font-semibold text-sm">Loja Fechada</p>
+              <p className="text-[#f39c12]/70 text-xs">Novos pedidos estão bloqueados</p>
+            </div>
+          </div>
+        )}
+
+        {/* Shop Control */}
+        <div className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white font-semibold text-sm">Status da Loja</p>
+              <p className={`text-xs mt-0.5 ${shopOpen ? 'text-[#27ae60]' : 'text-[#f39c12]'}`}>
+                {shopOpen ? '🟢 Aberta' : '🔴 Fechada'}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => updateSettingsMutation.mutate({ isOpen: true })}
+                disabled={shopOpen || updateSettingsMutation.isPending}
+                className="bg-[#27ae60] text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center gap-1"
+              >
+                <Power size={14} /> Abrir
+              </button>
+              <button
+                onClick={() => updateSettingsMutation.mutate({ isOpen: false })}
+                disabled={!shopOpen || updateSettingsMutation.isPending}
+                className="bg-[#c0392b] text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center gap-1"
+              >
+                <Power size={14} /> Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* KPI cards */}
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -79,18 +154,16 @@ export default function AdminDashboard() {
 
         {/* Quick nav */}
         <div>
-          <h2 className="text-white font-semibold text-sm mb-3">Gerenciar</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <p className="text-[#888] text-xs mb-2">Gerenciar</p>
+          <div className="grid grid-cols-3 gap-2">
             {navItems.map((item) => (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-3 flex flex-col items-center gap-2 active:scale-95 transition-transform"
+                className={`${item.color} rounded-2xl p-4 flex flex-col items-center gap-2 text-center`}
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color.split(" ")[0]}`}>
-                  <item.icon size={18} className={item.color.split(" ")[1]} />
-                </div>
-                <span className="text-white text-xs font-medium">{item.label}</span>
+                <item.icon size={24} />
+                <span className="text-xs font-medium">{item.label}</span>
               </button>
             ))}
           </div>
@@ -98,31 +171,24 @@ export default function AdminDashboard() {
 
         {/* Recent orders */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-white font-semibold text-sm">Pedidos Recentes</h2>
-            <button onClick={() => navigate("/admin/orders")} className="text-[#c0392b] text-xs flex items-center gap-0.5">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-white font-semibold text-sm">Pedidos Recentes</p>
+            <button onClick={() => navigate("/admin/orders")} className="text-[#c0392b] text-xs flex items-center gap-1">
               Ver todos <ChevronRight size={12} />
             </button>
           </div>
           <div className="flex flex-col gap-2">
-            {(recentOrders ?? []).map((order) => (
+            {(recentOrders ?? []).slice(0, 5).map((order: any) => (
               <button
                 key={order.id}
-                onClick={() => navigate("/admin/orders")}
-                className="bg-[#111] border border-[#1e1e1e] rounded-xl p-3 flex items-center justify-between text-left w-full"
+                onClick={() => navigate(`/admin/orders`)}
+                className="bg-[#111] border border-[#1e1e1e] rounded-xl p-3 flex items-center justify-between text-left"
               >
                 <div>
-                  <p className="text-[#d4af37] font-bold text-xs font-display">{order.orderNumber}</p>
-                    <p className="text-[#888] text-xs mt-0.5">{(order as any).userId}</p>
+                  <p className="text-[#d4af37] font-bold text-sm font-display">{order.orderNumber}</p>
+                  <p className={`text-xs mt-0.5 ${STATUS_COLORS[order.status]}`}>{STATUS_LABELS[order.status]}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-white font-semibold text-sm">
-                    R$ {parseFloat(order.total).toFixed(2).replace(".", ",")}
-                  </p>
-                  <p className={`text-xs ${STATUS_COLORS[order.status] ?? "text-[#888]"}`}>
-                    {STATUS_LABELS[order.status] ?? order.status}
-                  </p>
-                </div>
+                <p className="text-white font-semibold text-sm">R$ {parseFloat(order.total).toFixed(2).replace(".", ",")}</p>
               </button>
             ))}
           </div>

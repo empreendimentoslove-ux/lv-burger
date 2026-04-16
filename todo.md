@@ -63,3 +63,13 @@
 - [x] Validação de geração de código de entrega
 - [x] Validação de formatação de preços
 - [x] 14 testes passando (2 arquivos)
+
+
+## Novos Ajustes (v2)
+
+- [ ] Notificação sonora e visual de novo pedido no painel admin
+- [ ] Horário de funcionamento automático (17h-00h, terça-domingo)
+- [ ] Controle manual de abertura/fechamento da loja
+- [ ] Bloqueio de pedidos quando loja fechada
+- [ ] Localização automática no checkout
+- [ ] Comprovante de pagamento com upload de foto

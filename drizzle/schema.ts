@@ -157,3 +157,15 @@ export const deliveries = mysqlTable("deliveries", {
 });
 
 export type Delivery = typeof deliveries.$inferSelect;
+
+// ─── Shop Settings ────────────────────────────────────────────────────────────
+export const shopSettings = mysqlTable("shop_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  isOpen: boolean("isOpen").default(true).notNull(), // controle manual
+  openTime: varchar("openTime", { length: 5 }).default("17:00").notNull(), // HH:mm
+  closeTime: varchar("closeTime", { length: 5 }).default("00:00").notNull(), // HH:mm
+  operatingDays: varchar("operatingDays", { length: 20 }).default("1,2,3,4,5,6").notNull(), // 0=domingo, 1=segunda, ..., 6=sábado
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ShopSettings = typeof shopSettings.$inferSelect;

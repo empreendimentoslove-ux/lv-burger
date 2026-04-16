@@ -31,12 +31,15 @@ import {
   getProductById,
   getProducts,
   getSalesReport,
+  getShopSettings,
   getStockItems,
+  isShopOpen,
   startDeliveryRoute,
   updateCartItem,
   updateCategory,
   updateOrderStatus,
   updateProduct,
+  updateShopSettings,
   updateStockItem,
   updateUserProfile,
   updateUserRole,
@@ -352,6 +355,21 @@ export const appRouter = router({
         const end = new Date(input.endDate);
         end.setHours(23, 59, 59, 999);
         return getSalesReport(start, end);
+      }),
+  }),
+
+  // ─── Shop Settings ─────────────────────────────────────────────────────────
+  shop: router({
+    settings: publicProcedure.query(() => getShopSettings()),
+    isOpen: publicProcedure.query(async () => {
+      const settings = await getShopSettings();
+      return isShopOpen(settings);
+    }),
+    updateSettings: adminProcedure
+      .input(z.object({ isOpen: z.boolean().optional(), openTime: z.string().optional(), closeTime: z.string().optional(), operatingDays: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        await updateShopSettings(input);
+        return { success: true };
       }),
   }),
 });
