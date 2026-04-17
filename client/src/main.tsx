@@ -9,8 +9,16 @@ import { getLoginUrl } from "./const";
 import "./index.css";
 
 // Restore auth state from localStorage on app start
-const storedAuthState = localStorage.getItem("manus-runtime-user-info");
-const initialAuthState = storedAuthState ? JSON.parse(storedAuthState) : null;
+let initialAuthState = null;
+try {
+  const storedAuthState = localStorage.getItem("manus-runtime-user-info");
+  if (storedAuthState && storedAuthState !== "undefined") {
+    initialAuthState = JSON.parse(storedAuthState);
+  }
+} catch (error) {
+  console.warn("[Auth] Failed to restore auth state from localStorage", error);
+  localStorage.removeItem("manus-runtime-user-info");
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
