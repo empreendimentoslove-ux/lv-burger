@@ -113,25 +113,25 @@ export default function AdminDashboard() {
 
         {/* Shop Control */}
         <div className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3">
             <div>
               <p className="text-white font-semibold text-sm">Status da Loja</p>
               <p className={`text-xs mt-0.5 ${shopOpen ? 'text-[#27ae60]' : 'text-[#f39c12]'}`}>
                 {shopOpen ? '🟢 Aberta' : '🔴 Fechada'}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full">
               <button
                 onClick={() => updateSettingsMutation.mutate({ isOpen: true })}
                 disabled={shopOpen || updateSettingsMutation.isPending}
-                className="bg-[#27ae60] text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center gap-1"
+                className="flex-1 bg-[#27ae60] text-white px-3 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-1"
               >
                 <Power size={14} /> Abrir
               </button>
               <button
                 onClick={() => updateSettingsMutation.mutate({ isOpen: false })}
                 disabled={!shopOpen || updateSettingsMutation.isPending}
-                className="bg-[#c0392b] text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center gap-1"
+                className="flex-1 bg-[#c0392b] text-white px-3 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-1"
               >
                 <Power size={14} /> Fechar
               </button>
@@ -158,15 +158,15 @@ export default function AdminDashboard() {
         {/* Quick nav */}
         <div>
           <p className="text-[#888] text-xs mb-2">Gerenciar</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {navItems.map((item) => (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`${item.color} rounded-2xl p-4 flex flex-col items-center gap-2 text-center`}
+                className={`${item.color} rounded-2xl p-3 flex flex-col items-center gap-1.5 text-center`}
               >
-                <item.icon size={24} />
-                <span className="text-xs font-medium">{item.label}</span>
+                <item.icon size={20} />
+                <span className="text-xs font-medium line-clamp-2">{item.label}</span>
               </button>
             ))}
           </div>
