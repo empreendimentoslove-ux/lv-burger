@@ -8,7 +8,23 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
-const queryClient = new QueryClient();
+// Restore auth state from localStorage on app start
+const storedAuthState = localStorage.getItem("manus-runtime-user-info");
+const initialAuthState = storedAuthState ? JSON.parse(storedAuthState) : null;
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 60, // 1 hour
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    },
+  },
+});
+
+// Initialize auth cache with stored state
+if (initialAuthState) {
+  queryClient.setQueryData(["auth", "me"], initialAuthState);
+}
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
@@ -51,6 +67,12 @@ const trpcClient = trpc.createClient({
     }),
   ],
 });
+
+if (typeof window !== "undefined") {
+  window.addEventListener("focus", () => {
+    queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+  });
+}
 
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>

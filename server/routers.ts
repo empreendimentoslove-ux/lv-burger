@@ -374,7 +374,11 @@ export const appRouter = router({
     updateSettings: adminProcedure
       .input(z.object({ isOpen: z.boolean().optional(), openTime: z.string().optional(), closeTime: z.string().optional(), operatingDays: z.string().optional() }))
       .mutation(async ({ input }) => {
-        await updateShopSettings(input);
+        const dataToUpdate: any = { ...input };
+        if (input.isOpen !== undefined) {
+          dataToUpdate.manualOverride = true;
+        }
+        await updateShopSettings(dataToUpdate);
         return { success: true };
       }),
   }),

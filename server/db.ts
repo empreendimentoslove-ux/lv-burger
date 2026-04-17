@@ -583,11 +583,8 @@ export async function updateShopSettings(data: { isOpen?: boolean; openTime?: st
 export function isShopOpen(settings: any): boolean {
   if (!settings) return true;
   
-  // Manual override: if manually closed, always closed
-  if (settings.isOpen === false) return false;
-  
-  // Manual override: if manually open, always open (ignores schedule)
-  if (settings.isOpen === true && settings.manualOverride) return true;
+  // Manual override: if admin clicked open/close button, use that state (ignores schedule)
+  if (settings.manualOverride) return settings.isOpen === true;
   
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0=domingo, 1=segunda, ..., 6=sábado
