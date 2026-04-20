@@ -122,3 +122,15 @@
 - [x] Executar migration para criar tabelas no banco de dados
 - [x] Testar todas as funcionalidades (37 testes passando)
 - [x] Adicionar widget de anúncios na tela principal do cliente (carousel com indicadores)
+
+## Correção Crítica de Indisponibilidade (v7)
+
+- [x] Implementar keep-alive no servidor Express (65s)
+- [x] Adicionar timeout handling para requisições longas (30s)
+- [x] Implementar graceful shutdown com cleanup de recursos
+- [x] Adicionar monitoramento de memória e CPU
+- [x] Adicionar health check com métricas detalhadas (/api/health)
+- [x] Implementar tracking de requisições ativas
+- [x] Adicionar handlers para SIGTERM e SIGINT
+- [x] Adicionar handlers para uncaught exceptions
+- [x] Testar estabilidade com 37 testes passando (100% sucesso)
