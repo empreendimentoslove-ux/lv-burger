@@ -6,16 +6,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, Plus, Trash2 } from "lucide-react";
+import { Upload, Trash2 } from "lucide-react";
 
 const toast = (options: any) => {
   console.log(options);
   alert(options.title);
 };
 
+interface BusinessHours {
+  dayOfWeek: number;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
 export default function CompanySettings() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [editingPromotion, setEditingPromotion] = useState<any>(null);
+  const [businessHours, setBusinessHours] = useState<BusinessHours[]>([
+    { dayOfWeek: 0, isOpen: true, openTime: "17:00", closeTime: "00:00" },
+    { dayOfWeek: 1, isOpen: true, openTime: "17:00", closeTime: "00:00" },
+    { dayOfWeek: 2, isOpen: true, openTime: "17:00", closeTime: "00:00" },
+    { dayOfWeek: 3, isOpen: true, openTime: "17:00", closeTime: "00:00" },
+    { dayOfWeek: 4, isOpen: true, openTime: "17:00", closeTime: "00:00" },
+    { dayOfWeek: 5, isOpen: true, openTime: "17:00", closeTime: "00:00" },
+    { dayOfWeek: 6, isOpen: true, openTime: "17:00", closeTime: "00:00" },
+  ]);
 
   // Company info
   const { data: companyInfo, refetch: refetchCompany } = trpc.company.getInfo.useQuery();
@@ -27,7 +42,6 @@ export default function CompanySettings() {
   const createPromotionMutation = trpc.promotions.create.useMutation();
   const updatePromotionMutation = trpc.promotions.update.useMutation();
   const deletePromotionMutation = trpc.promotions.delete.useMutation();
-  const uploadPromotionImageMutation = trpc.promotions.uploadImage.useMutation();
 
   // Shop settings
   const { data: shopSettings, refetch: refetchShopSettings } = trpc.shop.settings.useQuery();
@@ -66,6 +80,9 @@ export default function CompanySettings() {
       });
       if (companyInfo.logoUrl) {
         setLogoPreview(companyInfo.logoUrl);
+      }
+      if (companyInfo.businessHours && Array.isArray(companyInfo.businessHours)) {
+        setBusinessHours(companyInfo.businessHours);
       }
     }
   }, [companyInfo]);
@@ -110,6 +127,19 @@ export default function CompanySettings() {
       toast({ title: "Informações da empresa atualizadas!" });
     } catch (error) {
       toast({ title: "Erro ao atualizar informações", variant: "destructive" });
+    }
+  };
+
+  const handleUpdateBusinessHours = async () => {
+    try {
+      await updateCompanyMutation.mutateAsync({
+        ...companyForm,
+        businessHours,
+      });
+      await refetchCompany();
+      toast({ title: "Horários de funcionamento atualizados!" });
+    } catch (error) {
+      toast({ title: "Erro ao atualizar horários", variant: "destructive" });
     }
   };
 
@@ -170,17 +200,17 @@ export default function CompanySettings() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       <div>
         <h1 className="text-3xl font-bold">Configurações da Empresa</h1>
         <p className="text-muted-foreground">Gerencie informações, horários e promoções</p>
       </div>
 
       <Tabs defaultValue="company" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="company">Empresa</TabsTrigger>
-          <TabsTrigger value="hours">Horários</TabsTrigger>
-          <TabsTrigger value="promotions">Promoções</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="company" className="text-xs sm:text-sm">Empresa</TabsTrigger>
+          <TabsTrigger value="hours" className="text-xs sm:text-sm">Horários</TabsTrigger>
+          <TabsTrigger value="promotions" className="text-xs sm:text-sm">Promoções</TabsTrigger>
         </TabsList>
 
         {/* Company Tab */}
@@ -194,13 +224,13 @@ export default function CompanySettings() {
               {/* Logo */}
               <div className="space-y-2">
                 <Label>Logo da Empresa</Label>
-                <div className="flex gap-4 items-start">
+                <div className="flex gap-4 items-start flex-col sm:flex-row">
                   {logoPreview && (
-                    <img src={logoPreview} alt="Logo" className="w-24 h-24 rounded-lg object-cover" />
+                    <img src={logoPreview} alt="Logo" className="w-24 h-24 rounded-lg object-cover flex-shrink-0" />
                   )}
-                  <div>
-                    <label htmlFor="logo-upload" className="cursor-pointer">
-                      <div className="border-2 border-dashed rounded-lg p-4 hover:bg-accent transition">
+                  <div className="flex-1 w-full">
+                    <label htmlFor="logo-upload" className="cursor-pointer block">
+                      <div className="border-2 border-dashed rounded-lg p-4 hover:bg-accent transition text-center">
                         <Upload className="w-6 h-6 mx-auto mb-2" />
                         <p className="text-sm font-medium">Clique para fazer upload</p>
                         <p className="text-xs text-muted-foreground">PNG, JPG até 5MB</p>
@@ -226,6 +256,7 @@ export default function CompanySettings() {
                     id="name"
                     value={companyForm.name}
                     onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-2">
@@ -234,6 +265,7 @@ export default function CompanySettings() {
                     id="phone"
                     value={companyForm.phone}
                     onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-2">
@@ -243,6 +275,7 @@ export default function CompanySettings() {
                     type="email"
                     value={companyForm.email}
                     onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-2">
@@ -251,6 +284,7 @@ export default function CompanySettings() {
                     id="address"
                     value={companyForm.address}
                     onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
+                    className="text-sm"
                   />
                 </div>
               </div>
@@ -262,10 +296,11 @@ export default function CompanySettings() {
                   value={companyForm.description}
                   onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })}
                   rows={4}
+                  className="text-sm"
                 />
               </div>
 
-              <Button onClick={handleUpdateCompany} disabled={updateCompanyMutation.isPending}>
+              <Button onClick={handleUpdateCompany} disabled={updateCompanyMutation.isPending} className="w-full sm:w-auto">
                 {updateCompanyMutation.isPending ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </CardContent>
@@ -277,57 +312,66 @@ export default function CompanySettings() {
           <Card>
             <CardHeader>
               <CardTitle>Horários de Funcionamento</CardTitle>
-              <CardDescription>Configure quando sua loja está aberta</CardDescription>
+              <CardDescription>Configure os horários por dia da semana</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="openTime">Horário de Abertura</Label>
-                  <Input
-                    id="openTime"
-                    type="time"
-                    value={shopForm.openTime}
-                    onChange={(e) => setShopForm({ ...shopForm, openTime: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="closeTime">Horário de Fechamento</Label>
-                  <Input
-                    id="closeTime"
-                    type="time"
-                    value={shopForm.closeTime}
-                    onChange={(e) => setShopForm({ ...shopForm, closeTime: e.target.value })}
-                  />
-                </div>
+            <CardContent className="space-y-4">
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {businessHours.map((hours, idx) => (
+                  <div key={hours.dayOfWeek} className="border rounded-lg p-3 space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label className="font-semibold text-sm">{dayLabels[hours.dayOfWeek.toString()]}</Label>
+                      <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={hours.isOpen}
+                          onChange={(e) => {
+                            const updated = [...businessHours];
+                            updated[idx].isOpen = e.target.checked;
+                            setBusinessHours(updated);
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-xs">Aberto</span>
+                      </label>
+                    </div>
+                    {hours.isOpen && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label htmlFor={`open-${idx}`} className="text-xs">Abre</Label>
+                          <Input
+                            id={`open-${idx}`}
+                            type="time"
+                            value={hours.openTime}
+                            onChange={(e) => {
+                              const updated = [...businessHours];
+                              updated[idx].openTime = e.target.value;
+                              setBusinessHours(updated);
+                            }}
+                            className="text-xs h-8"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor={`close-${idx}`} className="text-xs">Fecha</Label>
+                          <Input
+                            id={`close-${idx}`}
+                            type="time"
+                            value={hours.closeTime}
+                            onChange={(e) => {
+                              const updated = [...businessHours];
+                              updated[idx].closeTime = e.target.value;
+                              setBusinessHours(updated);
+                            }}
+                            className="text-xs h-8"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
-              <div className="space-y-2">
-                <Label>Dias de Funcionamento</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {Object.entries(dayLabels).map(([day, label]) => (
-                    <label key={day} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={shopForm.operatingDays.split(",").includes(day)}
-                        onChange={(e) => {
-                          let days = shopForm.operatingDays.split(",");
-                          if (e.target.checked) {
-                            days.push(day);
-                          } else {
-                            days = days.filter((d: string) => d !== day);
-                          }
-                          setShopForm({ ...shopForm, operatingDays: days.join(",") });
-                        }}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <Button onClick={handleUpdateShopSettings} disabled={updateShopSettingsMutation.isPending}>
-                {updateShopSettingsMutation.isPending ? "Salvando..." : "Salvar Horários"}
+              <Button onClick={handleUpdateBusinessHours} disabled={updateCompanyMutation.isPending} className="w-full">
+                {updateCompanyMutation.isPending ? "Salvando..." : "Salvar Horários"}
               </Button>
             </CardContent>
           </Card>
@@ -346,9 +390,10 @@ export default function CompanySettings() {
                 <Label htmlFor="promo-title">Título</Label>
                 <Input
                   id="promo-title"
-                  placeholder="Ex: Mega Promoção de Hamburgueres"
+                  placeholder="Ex: Mega Promoção"
                   value={promotionForm.title}
                   onChange={(e) => setPromotionForm({ ...promotionForm, title: e.target.value })}
+                  className="text-sm"
                 />
               </div>
 
@@ -360,43 +405,46 @@ export default function CompanySettings() {
                   value={promotionForm.description}
                   onChange={(e) => setPromotionForm({ ...promotionForm, description: e.target.value })}
                   rows={3}
+                  className="text-sm"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="promo-discount">Desconto (%)</Label>
+                  <Label htmlFor="discount">Desconto %</Label>
                   <Input
-                    id="promo-discount"
+                    id="discount"
                     type="number"
+                    min="0"
+                    max="100"
                     value={promotionForm.discountPercentage}
-                    onChange={(e) =>
-                      setPromotionForm({ ...promotionForm, discountPercentage: parseInt(e.target.value) || 0 })
-                    }
+                    onChange={(e) => setPromotionForm({ ...promotionForm, discountPercentage: parseInt(e.target.value) })}
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="promo-start">Data Início</Label>
+                  <Label htmlFor="start-date">Data Início</Label>
                   <Input
-                    id="promo-start"
+                    id="start-date"
                     type="date"
                     value={promotionForm.startDate}
                     onChange={(e) => setPromotionForm({ ...promotionForm, startDate: e.target.value })}
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="promo-end">Data Fim</Label>
+                  <Label htmlFor="end-date">Data Fim</Label>
                   <Input
-                    id="promo-end"
+                    id="end-date"
                     type="date"
                     value={promotionForm.endDate}
                     onChange={(e) => setPromotionForm({ ...promotionForm, endDate: e.target.value })}
+                    className="text-sm"
                   />
                 </div>
               </div>
 
               <Button onClick={handleCreatePromotion} disabled={createPromotionMutation.isPending} className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
                 {createPromotionMutation.isPending ? "Criando..." : "Criar Promoção"}
               </Button>
             </CardContent>
@@ -404,44 +452,33 @@ export default function CompanySettings() {
 
           {/* Promotions List */}
           {promotions.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-semibold">Promoções Ativas</h3>
-              {promotions.map((promo: any) => (
-                <Card key={promo.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{promo.title}</h4>
-                        <p className="text-sm text-muted-foreground">{promo.description}</p>
-                        <div className="flex gap-4 mt-2 text-sm">
-                          {promo.discountPercentage && (
-                            <span className="text-green-600 font-medium">{promo.discountPercentage}% OFF</span>
-                          )}
-                          <span className="text-muted-foreground">
-                            {new Date(promo.startDate).toLocaleDateString()} -{" "}
-                            {new Date(promo.endDate).toLocaleDateString()}
-                          </span>
-                        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Promoções Ativas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {promotions.map((promo: any) => (
+                  <div key={promo.id} className="border rounded-lg p-3 space-y-2 text-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{promo.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{promo.description}</p>
+                        {promo.discountPercentage && (
+                          <p className="text-xs font-medium text-green-600 mt-1">{promo.discountPercentage}% OFF</p>
+                        )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
                         onClick={() => handleDeletePromotion(promo.id)}
                         disabled={deletePromotionMutation.isPending}
+                        className="text-red-500 hover:text-red-700 flex-shrink-0 p-1"
                       >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {promotions.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Nenhuma promoção criada ainda</p>
-            </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
       </Tabs>

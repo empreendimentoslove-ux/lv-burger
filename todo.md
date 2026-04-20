@@ -134,3 +134,14 @@
 - [x] Adicionar handlers para SIGTERM e SIGINT
 - [x] Adicionar handlers para uncaught exceptions
 - [x] Testar estabilidade com 37 testes passando (100% sucesso)
+
+## Status de Funcionamento e Responsividade (v8)
+
+- [x] Adicionar componente de status de funcionamento na Home com horários
+- [x] Implementar lógica de cálculo de abertura/fechamento baseado em horários
+- [x] Adicionar gerenciador de horários no painel CompanySettings (por dia da semana)
+- [x] Adicionar campo businessHours ao banco de dados
+- [x] Melhorar responsividade de inputs e botões em mobile
+- [x] Adicionar scroll em horários para melhor UX em mobile
+- [x] Testar em diferentes resoluções
+- [x] Todos os 37 testes passando (100% sucesso)

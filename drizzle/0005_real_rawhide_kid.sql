@@ -1,0 +1,1 @@
+ALTER TABLE `company_info` ADD `businessHours` json;

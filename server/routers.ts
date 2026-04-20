@@ -401,6 +401,12 @@ export const appRouter = router({
           phone: z.string().optional(),
           email: z.string().optional(),
           address: z.string().optional(),
+          businessHours: z.array(z.object({
+            dayOfWeek: z.number(),
+            isOpen: z.boolean(),
+            openTime: z.string(),
+            closeTime: z.string(),
+          })).optional(),
         })
       )
       .mutation(async ({ input }) => {

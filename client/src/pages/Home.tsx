@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { BottomNav } from "@/components/BottomNav";
 import { FloatingCart } from "@/components/FloatingCart";
-import { ChevronRight, Star, Clock, Truck, AlertCircle } from "lucide-react";
+import { ChevronRight, Star, Clock, Truck, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 
 export default function Home() {
   const { user } = useAuth();
@@ -12,8 +12,46 @@ export default function Home() {
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const { data: categories } = trpc.categories.list.useQuery();
   const { data: promotions = [], isLoading: promosLoading, error: promosError } = trpc.promotions.getActive.useQuery();
+  const { data: companyInfo } = trpc.company.getInfo.useQuery();
 
   const firstName = user?.name?.split(" ")[0] ?? "Cliente";
+
+  // Calculate if store is open based on businessHours
+  const getStoreStatus = () => {
+    try {
+      if (!companyInfo?.businessHours || companyInfo.businessHours.length === 0) {
+        return { open: true, nextChange: "Horários não configurados" };
+      }
+      
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+      
+      const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+      const todayHours = (companyInfo.businessHours as any[]).find((h: any) => h.dayOfWeek === dayOfWeek);
+      
+      if (!todayHours || !todayHours.isOpen) {
+        return { open: false, nextChange: `Abre ${dayNames[(dayOfWeek + 1) % 7]}` };
+      }
+      
+      const [openHour, openMin] = todayHours.openTime.split(":").map(Number);
+      const [closeHour, closeMin] = todayHours.closeTime.split(":").map(Number);
+      const openTimeInMinutes = openHour * 60 + openMin;
+      const closeTimeInMinutes = closeHour * 60 + closeMin;
+      
+      if (currentTime >= openTimeInMinutes && currentTime < closeTimeInMinutes) {
+        return { open: true, nextChange: `Fecha às ${todayHours.closeTime}` };
+      } else if (currentTime < openTimeInMinutes) {
+        return { open: false, nextChange: `Abre às ${todayHours.openTime}` };
+      } else {
+        return { open: false, nextChange: `Abre ${dayNames[(dayOfWeek + 1) % 7]}` };
+      }
+    } catch (error) {
+      return { open: true, nextChange: "" };
+    }
+  };
+
+  const storeStatus = getStoreStatus();
 
   // Auto-rotate promotions every 5 seconds
   useEffect(() => {
@@ -35,6 +73,37 @@ export default function Home() {
           </div>
           <div className="w-10 h-10 rounded-full bg-[#c0392b] flex items-center justify-center">
             <span className="text-white font-bold text-sm">{firstName[0]?.toUpperCase()}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Store Status Badge */}
+      <div className="px-4 mb-4">
+        <div className={`rounded-2xl p-3 flex items-center gap-3 ${
+          storeStatus.open 
+            ? "bg-gradient-to-r from-[#1a4d2e] to-[#0f3d24] border border-[#2d7a4f]" 
+            : "bg-gradient-to-r from-[#4d1a1a] to-[#3d0f0f] border border-[#7a2d2d]"
+        }`}>
+          {storeStatus.open ? (
+            <CheckCircle2 size={20} className="text-[#4ade80] flex-shrink-0" />
+          ) : (
+            <XCircle size={20} className="text-[#ef4444] flex-shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className={`font-semibold text-xs sm:text-sm ${storeStatus.open ? "text-[#4ade80]" : "text-[#ef4444]"}`}>
+              {storeStatus.open ? "Aberto" : "Fechado"}
+            </p>
+            <p className={`text-xs ${storeStatus.open ? "text-[#86efac]" : "text-[#fca5a5]"}`}>
+              {storeStatus.nextChange}
+            </p>
+            {companyInfo?.businessHours && companyInfo.businessHours.length > 0 && (() => {
+              const today = (companyInfo.businessHours as any[]).find((h: any) => h.dayOfWeek === new Date().getDay());
+              return today && today.isOpen ? (
+                <p className={`text-[10px] mt-1 ${storeStatus.open ? "text-[#4ade80]/70" : "text-[#fca5a5]/70"}`}>
+                  {today.openTime} - {today.closeTime}
+                </p>
+              ) : null;
+            })()}
           </div>
         </div>
       </div>
@@ -95,7 +164,7 @@ export default function Home() {
       {/* Hero Banner */}
       <div className="px-4 mb-6">
         <div
-          className="relative rounded-2xl overflow-hidden h-44 cursor-pointer"
+          className="relative rounded-2xl overflow-hidden h-44 cursor-pointer active:opacity-90 transition-opacity"
           onClick={() => navigate("/menu")}
           style={{
             background: "linear-gradient(135deg, #1a0a0a 0%, #2d0f0f 100%)",
@@ -114,18 +183,21 @@ export default function Home() {
             </div>
             <h2 className="font-display text-white text-xl font-bold leading-tight">LV Gold</h2>
             <p className="text-[#aaa] text-xs mt-0.5">Wagyu 200g com queijo brie e aioli trufado</p>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className="text-[#d4af37] font-bold text-sm">R$ 52,90</span>
-              <span className="bg-[#c0392b] text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+              <button
+                onClick={() => navigate("/menu")}
+                className="bg-[#c0392b] hover:bg-[#a02d24] active:scale-95 text-white text-[10px] px-2 py-0.5 rounded-full font-medium transition-all"
+              >
                 Ver cardápio →
-              </span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Info chips */}
-      <div className="px-4 mb-6 flex gap-3 overflow-x-auto scrollbar-hide">
+      <div className="px-4 mb-6 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-2">
         {[
           { icon: Clock, text: "30-45 min", sub: "Entrega" },
           { icon: Star, text: "4.9", sub: "Avaliação" },
@@ -133,7 +205,7 @@ export default function Home() {
         ].map((chip) => (
           <div
             key={chip.text}
-            className="flex-shrink-0 bg-[#111] border border-[#222] rounded-xl px-4 py-2.5 flex items-center gap-2"
+            className="flex-shrink-0 bg-[#111] border border-[#222] rounded-xl px-3 sm:px-4 py-2.5 flex items-center gap-2 min-w-max"
           >
             <chip.icon size={14} className="text-[#c0392b]" />
             <div>
@@ -148,7 +220,7 @@ export default function Home() {
       <div className="px-4 mb-2">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-white font-semibold text-base">Categorias</h2>
-          <button onClick={() => navigate("/menu")} className="text-[#c0392b] text-sm flex items-center gap-0.5">
+          <button onClick={() => navigate("/menu")} className="text-[#c0392b] text-sm flex items-center gap-0.5 active:opacity-70 transition-opacity">
             Ver tudo <ChevronRight size={14} />
           </button>
         </div>
@@ -157,10 +229,10 @@ export default function Home() {
             <button
               key={cat.id}
               onClick={() => navigate(`/menu?category=${cat.id}`)}
-              className="bg-[#111] border border-[#222] rounded-xl p-4 text-left active:scale-95 transition-transform"
+              className="bg-[#111] border border-[#222] rounded-xl p-4 text-left active:scale-95 active:bg-[#1a1a1a] transition-all w-full"
             >
               <p className="text-white font-medium text-sm">{cat.name}</p>
-              <p className="text-[#666] text-xs mt-0.5">{cat.description}</p>
+              <p className="text-[#666] text-[10px] mt-0.5">{cat.description}</p>
               <ChevronRight size={14} className="text-[#c0392b] mt-2" />
             </button>
           ))}

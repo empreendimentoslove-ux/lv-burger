@@ -199,6 +199,7 @@ export const companyInfo = mysqlTable("company_info", {
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 320 }),
   address: text("address"),
+  businessHours: json("businessHours").$type<Array<{ dayOfWeek: number; isOpen: boolean; openTime: string; closeTime: string }>>(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
