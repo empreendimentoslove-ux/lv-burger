@@ -1,16 +1,28 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { BottomNav } from "@/components/BottomNav";
 import { FloatingCart } from "@/components/FloatingCart";
-import { ChevronRight, Star, Clock, Truck } from "lucide-react";
+import { ChevronRight, Star, Clock, Truck, AlertCircle } from "lucide-react";
 
 export default function Home() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const { data: categories } = trpc.categories.list.useQuery();
+  const { data: promotions = [], isLoading: promosLoading, error: promosError } = trpc.promotions.getActive.useQuery();
 
   const firstName = user?.name?.split(" ")[0] ?? "Cliente";
+
+  // Auto-rotate promotions every 5 seconds
+  useEffect(() => {
+    if (promotions.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentPromoIndex((prev) => (prev + 1) % promotions.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [promotions.length]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] pb-nav">
@@ -26,6 +38,59 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Promotions Banner - Loading State */}
+      {promosLoading && (
+        <div className="px-4 mb-6">
+          <div className="rounded-2xl bg-[#111] border border-[#222] p-4 h-32 animate-pulse" />
+        </div>
+      )}
+      
+      {/* Promotions Banner - Error State */}
+      {promosError && (
+        <div className="px-4 mb-6">
+          <div className="rounded-2xl bg-[#1a0a0a] border border-[#c0392b]/30 p-4 flex items-center gap-3 text-[#c0392b]">
+            <AlertCircle size={20} className="flex-shrink-0" />
+            <p className="text-sm">Erro ao carregar promoções</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Promotions Banner - Success State */}
+      {!promosLoading && !promosError && promotions.length > 0 && (
+        <div className="px-4 mb-6">
+          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#c0392b] to-[#a02d24] p-4 text-white">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-[#ffcc00] text-xs font-bold uppercase tracking-widest mb-1">Promoção</p>
+                <h3 className="font-display text-lg font-bold mb-1">{promotions[currentPromoIndex]?.title}</h3>
+                <p className="text-sm text-white/90 mb-3">{promotions[currentPromoIndex]?.description}</p>
+                {promotions[currentPromoIndex]?.discountPercentage && (
+                  <span className="inline-block bg-[#ffcc00] text-[#c0392b] font-bold px-3 py-1 rounded-full text-sm">
+                    {promotions[currentPromoIndex].discountPercentage}% OFF
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {/* Carousel indicators */}
+            {promotions.length > 1 && (
+              <div className="flex gap-1.5 mt-4 justify-center">
+                {promotions.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentPromoIndex(idx)}
+                    className={`transition-all rounded-full ${
+                      idx === currentPromoIndex ? "bg-white w-6 h-2" : "bg-white/50 w-2 h-2"
+                    }`}
+                    aria-label={`Promoção ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Hero Banner */}
       <div className="px-4 mb-6">

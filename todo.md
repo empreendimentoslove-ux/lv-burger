@@ -121,4 +121,4 @@
 - [x] Adicionar link de Configurações no dashboard admin
 - [x] Executar migration para criar tabelas no banco de dados
 - [x] Testar todas as funcionalidades (37 testes passando)
-- [ ] Adicionar widget de anúncios na tela principal do cliente
+- [x] Adicionar widget de anúncios na tela principal do cliente (carousel com indicadores)
