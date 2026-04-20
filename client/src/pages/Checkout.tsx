@@ -136,7 +136,7 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-32">
+    <div className="min-h-screen bg-[#0a0a0a] pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-[#0a0a0a] border-b border-[#1a1a1a] px-4 pt-12 pb-4">
         <div className="flex items-center gap-3">
@@ -157,7 +157,7 @@ export default function Checkout() {
         </div>
       </div>
 
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 pb-28">
         {step === "address" && (
           <div className="flex flex-col gap-4">
             <div className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-4">
@@ -346,11 +346,11 @@ export default function Checkout() {
       </div>
 
       {/* CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-[#1a1a1a] p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent border-t border-[#1a1a1a] p-4 pt-6 z-50">
         <button
           onClick={step === "address" ? handleNext : handleSubmit}
           disabled={isSubmitting || !shopOpen}
-          className="w-full max-w-md mx-auto block bg-[#c0392b] text-white py-4 rounded-2xl font-semibold text-base active:scale-95 transition-transform lv-shadow disabled:opacity-60"
+          className="w-full bg-[#c0392b] text-white py-4 rounded-2xl font-semibold text-base active:scale-95 transition-transform lv-shadow disabled:opacity-60 touch-manipulation"
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center gap-2">

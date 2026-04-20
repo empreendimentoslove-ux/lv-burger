@@ -22,7 +22,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-32">
+    <div className="min-h-screen bg-[#0a0a0a] pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-[#0a0a0a] border-b border-[#1a1a1a] px-4 pt-12 pb-4">
         <div className="flex items-center gap-3">
@@ -61,7 +61,7 @@ export default function Cart() {
           </div>
 
           {/* Items */}
-          <div className="px-4 py-4 flex flex-col gap-3">
+          <div className="px-4 py-4 pb-28 flex flex-col gap-3">
             {items.map((item) => (
               <div key={item.id} className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-3 flex gap-3">
                 <img
@@ -131,7 +131,7 @@ export default function Cart() {
 
       {/* CTA */}
       {items.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-[#1a1a1a] p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent border-t border-[#1a1a1a] p-4 pt-6 z-50">
           {!shopOpen && (
             <div className="bg-[#f39c12]/10 border border-[#f39c12]/30 rounded-xl p-3 mb-3 flex items-center gap-2">
               <AlertCircle size={16} className="text-[#f39c12] flex-shrink-0" />
@@ -141,7 +141,7 @@ export default function Cart() {
           <button
             onClick={() => navigate("/checkout")}
             disabled={!shopOpen}
-            className="w-full max-w-md mx-auto block bg-[#c0392b] text-white py-4 rounded-2xl font-semibold text-base active:scale-95 transition-transform lv-shadow disabled:opacity-60"
+            className="w-full bg-[#c0392b] text-white py-4 rounded-2xl font-semibold text-base active:scale-95 transition-transform lv-shadow disabled:opacity-60 touch-manipulation"
           >
             {shopOpen ? `Finalizar Pedido · R$ ${totalPrice.toFixed(2).replace(".", ",")}` : "Loja Fechada"}
           </button>

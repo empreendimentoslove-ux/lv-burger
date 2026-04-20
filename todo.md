@@ -168,3 +168,12 @@
 - [x] Testar estabilidade com 43 testes passando (100% sucesso)
 - [x] Melhorar health check do cliente para usar /api/health
 - [x] Aumentar frequência de detecção de desconexão
+
+## Correção de Responsividade de Botões (v11)
+
+- [x] Ajustar botão de finalizar pedido para aparecer completamente na tela
+- [x] Ajustar botão de enviar comprovante para aparecer completamente na tela
+- [x] Melhorar padding/margin no carrinho de compras (pb-28 adicionado)
+- [x] Adicionar gradiente de fundo para melhor contraste do botão
+- [x] Remover max-w-md para botão ocupar 100% da largura
+- [x] Adicionar touch-manipulation para melhor UX em mobile
