@@ -13,14 +13,17 @@ import {
   createOrder,
   createProduct,
   createPromotion,
+  createStock,
   createStockItem,
   deleteCategory,
   deleteProduct,
   deletePromotion,
+  deleteStock,
   getAllCategories,
   getAllOrders,
   getAllProducts,
   getAllPromotions,
+  getAllStock,
   getAllUsers,
   getActivePromotions,
   getAvailableDeliveries,
@@ -36,6 +39,7 @@ import {
   getProductById,
   getProducts,
   getPromotionById,
+  getStockByProductId,
   getSalesReport,
   getShopSettings,
   getStockItems,
@@ -47,6 +51,7 @@ import {
   updateOrderStatus,
   updateProduct,
   updatePromotion,
+  updateStock,
   updateShopSettings,
   updateStockItem,
   updateUserProfile,
@@ -314,31 +319,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Stock ─────────────────────────────────────────────────────────────────
-  stock: router({
-    list: adminProcedure.query(() => getStockItems()),
-    update: adminProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          name: z.string().optional(),
-          unit: z.string().optional(),
-          quantity: z.string().optional(),
-          minQuantity: z.string().optional(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const { id, ...data } = input;
-        await updateStockItem(id, data);
-        return { success: true };
-      }),
-    create: adminProcedure
-      .input(z.object({ name: z.string().min(1), unit: z.string(), quantity: z.string(), minQuantity: z.string() }))
-      .mutation(async ({ input }) => {
-        await createStockItem(input);
-        return { success: true };
-      }),
-  }),
+
 
   // ─── Team ──────────────────────────────────────────────────────────────────
   team: router({
@@ -485,8 +466,43 @@ export const appRouter = router({
         const key = `promotions/${nanoid(12)}.${ext}`;
         const { url } = await storagePut(key, buffer, input.mimeType);
         return { url };
+       }),
+  }),
+
+  // ─── Stock Management ──────────────────────────────────────────────────────
+  stock: router({
+    getAll: adminProcedure.query(async () => {
+      return await getAllStock();
+    }),
+    getByProductId: adminProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        return await getStockByProductId(input.productId);
+      }),
+    create: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        quantity: z.number().min(0),
+        minQuantity: z.number().min(0).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await createStock(input);
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        quantity: z.number().min(0).optional(),
+        minQuantity: z.number().min(0).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updateStock(id, data);
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteStock(input.id);
       }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

@@ -12,6 +12,7 @@ import {
   products,
   promotions,
   shopSettings,
+  stock,
   stockItems,
   users,
 } from "../drizzle/schema";
@@ -792,4 +793,46 @@ export async function getPromotionById(id: number) {
   if (!db) return null;
   const result = await db.select().from(promotions).where(eq(promotions.id, id)).limit(1);
   return result[0] || null;
+}
+
+
+// ─── Stock Management ─────────────────────────────────────────────────────────
+export async function getStockByProductId(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select().from(stock).where(eq(stock.productId, productId));
+  return result || [];
+}
+
+export async function getAllStock() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select().from(stock);
+  return result || [];
+}
+
+export async function createStock(data: { productId: number; quantity: number; minQuantity?: number }) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(stock).values({
+    productId: data.productId,
+    quantity: data.quantity,
+    minQuantity: data.minQuantity || 0,
+  });
+  return await getStockByProductId(data.productId);
+}
+
+export async function updateStock(id: number, data: { quantity?: number; minQuantity?: number }) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.update(stock).set(data).where(eq(stock.id, id));
+  const result = await db.select().from(stock).where(eq(stock.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function deleteStock(id: number) {
+  const db = await getDb();
+  if (!db) return { success: false };
+  await db.delete(stock).where(eq(stock.id, id));
+  return { success: true };
 }

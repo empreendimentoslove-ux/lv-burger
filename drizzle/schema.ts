@@ -205,3 +205,16 @@ export const companyInfo = mysqlTable("company_info", {
 
 export type CompanyInfo = typeof companyInfo.$inferSelect;
 export type InsertCompanyInfo = typeof companyInfo.$inferInsert;
+
+// ─── Stock ────────────────────────────────────────────────────────────────────
+export const stock = mysqlTable("stock", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").default(0).notNull(),
+  minQuantity: int("minQuantity").default(0).notNull(),
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Stock = typeof stock.$inferSelect;
+export type InsertStock = typeof stock.$inferInsert;

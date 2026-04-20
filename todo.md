@@ -145,3 +145,14 @@
 - [x] Adicionar scroll em horários para melhor UX em mobile
 - [x] Testar em diferentes resoluções
 - [x] Todos os 37 testes passando (100% sucesso)
+
+## Gerenciamento de Estoque (v9)
+
+- [x] Adicionar tabela de estoque no banco de dados
+- [x] Criar endpoints tRPC para CRUD de estoque (create, update, delete, getAll, getByProductId)
+- [x] Implementar página de gerenciamento de estoque no admin (/admin/stock)
+- [x] Adicionar indicador visual de estoque baixo (alerta amarelo)
+- [x] Testar funcionalidades de estoque com testes automatizados (6 testes de estoque + 37 testes anteriores = 43 testes passando)
+- [x] Estoque é APENAS para admin (não aparece na tela do cliente)
+- [x] Rota /admin/stock registrada e link no dashboard admin
+- [x] Corrigir getStockByProductId para retornar array
