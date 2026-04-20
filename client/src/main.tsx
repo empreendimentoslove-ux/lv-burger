@@ -91,12 +91,9 @@ const startHealthCheck = () => {
   
   healthCheckInterval = setInterval(async () => {
     try {
-      const response = await fetch("/api/trpc?batch=1", {
-        method: "POST",
+      const response = await fetch("/api/health", {
+        method: "GET",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([{
-          0: { path: "system.health", input: { timestamp: Date.now() } }
-        }]),
         credentials: "include",
       });
       
