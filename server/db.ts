@@ -102,7 +102,7 @@ export async function getCategories() {
 export async function getAllCategories() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(categories).orderBy(categories.sortOrder);
+  return db.select().from(categories).where(eq(categories.active, true)).orderBy(categories.sortOrder);
 }
 
 export async function createCategory(data: {
@@ -153,7 +153,7 @@ export async function getProducts(categoryId?: number) {
 export async function getAllProducts() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(products).orderBy(products.categoryId, products.sortOrder);
+  return db.select().from(products).where(eq(products.active, true)).orderBy(products.categoryId, products.sortOrder);
 }
 
 export async function getProductById(id: number) {

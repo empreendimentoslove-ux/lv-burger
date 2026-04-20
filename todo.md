@@ -84,3 +84,11 @@
 - [x] Adicionado error handling em todas as mutações (create, update, delete)
 - [x] Implementados 9 testes de CRUD para produtos e categorias
 - [x] Todos os 29 testes passando (100% sucesso)
+
+## Correções de DELETE (v4)
+
+- [x] Corrigido getAllProducts() para filtrar por active=true
+- [x] Corrigido getAllCategories() para filtrar por active=true
+- [x] Botão de deletar agora remove itens da lista corretamente
+- [x] Implementados 2 testes de delete (produtos e categorias)
+- [x] Todos os 31 testes passando (100% sucesso)

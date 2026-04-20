@@ -177,7 +177,56 @@ describe("Products and Categories CRUD", () => {
     });
   });
 
-  describe("Error Handling", () => {
+  describe("Delete Operations", () => {
+    it("should delete a product and remove it from list", async () => {
+      const categories = await adminCaller.categories.listAll();
+      const categoryId = categories[0]?.id;
+
+      if (!categoryId) {
+        throw new Error("No categories found");
+      }
+
+      const product = await adminCaller.products.create({
+        categoryId,
+        name: `Delete Test Product ${timestamp}`,
+        description: "Product to be deleted",
+        price: "19.90",
+        imageUrl: "https://example.com/burger.jpg",
+      });
+
+      expect(product).toBeDefined();
+      const productId = product!.id;
+
+      let products = await adminCaller.products.listAll();
+      expect(products.some((p) => p.id === productId)).toBe(true);
+
+      await adminCaller.products.delete({ id: productId });
+
+      products = await adminCaller.products.listAll();
+      expect(products.some((p) => p.id === productId)).toBe(false);
+    });
+
+    it("should delete a category and remove it from list", async () => {
+      const category = await adminCaller.categories.create({
+        name: `Delete Test Category ${timestamp}`,
+        slug: `delete-test-${timestamp}`,
+        description: "Category to be deleted",
+      });
+
+      expect(category).toBeDefined();
+      const categoryId = category!.id;
+
+      let categories = await adminCaller.categories.listAll();
+      expect(categories.some((c) => c.id === categoryId)).toBe(true);
+
+      await adminCaller.categories.delete({ id: categoryId });
+
+      categories = await adminCaller.categories.listAll();
+      expect(categories.some((c) => c.id === categoryId)).toBe(false);
+    });
+  });
+
+  describe("Error handling", () => {
     it("should handle product creation with non-existent category", async () => {
       try {
         await adminCaller.products.create({
