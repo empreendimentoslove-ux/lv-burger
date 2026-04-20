@@ -12,16 +12,21 @@ import {
   createCategory,
   createOrder,
   createProduct,
+  createPromotion,
   createStockItem,
   deleteCategory,
   deleteProduct,
+  deletePromotion,
   getAllCategories,
   getAllOrders,
   getAllProducts,
+  getAllPromotions,
   getAllUsers,
+  getActivePromotions,
   getAvailableDeliveries,
   getCartItems,
   getCategories,
+  getCompanyInfo,
   getDailyReport,
   getDeliveriesByMotoboy,
   getDeliveryByOrderId,
@@ -30,6 +35,7 @@ import {
   getOrdersByUser,
   getProductById,
   getProducts,
+  getPromotionById,
   getSalesReport,
   getShopSettings,
   getStockItems,
@@ -37,8 +43,10 @@ import {
   startDeliveryRoute,
   updateCartItem,
   updateCategory,
+  updateCompanyInfo,
   updateOrderStatus,
   updateProduct,
+  updatePromotion,
   updateShopSettings,
   updateStockItem,
   updateUserProfile,
@@ -376,6 +384,101 @@ export const appRouter = router({
         }
         await updateShopSettings(dataToUpdate);
         return { success: true };
+      }),
+  }),
+
+  // ─── Company Settings ──────────────────────────────────────────────────────
+  company: router({
+    getInfo: publicProcedure.query(async () => {
+      return await getCompanyInfo();
+    }),
+    updateInfo: adminProcedure
+      .input(
+        z.object({
+          name: z.string().optional(),
+          logoUrl: z.string().optional(),
+          description: z.string().optional(),
+          phone: z.string().optional(),
+          email: z.string().optional(),
+          address: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await updateCompanyInfo(input);
+      }),
+    uploadLogo: adminProcedure
+      .input(z.object({ base64: z.string(), mimeType: z.string() }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.base64, "base64");
+        const ext = input.mimeType.split("/")[1] || "jpg";
+        const key = `company/logo-${nanoid(8)}.${ext}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        await updateCompanyInfo({ logoUrl: url });
+        return { url };
+      }),
+  }),
+
+  // ─── Promotions ────────────────────────────────────────────────────────────
+  promotions: router({
+    getAll: publicProcedure.query(async () => {
+      return await getAllPromotions();
+    }),
+    getActive: publicProcedure.query(async () => {
+      return await getActivePromotions();
+    }),
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await getPromotionById(input.id);
+      }),
+    create: adminProcedure
+      .input(
+        z.object({
+          title: z.string().min(1),
+          description: z.string().min(1),
+          imageUrl: z.string().optional(),
+          discountPercentage: z.number().optional(),
+          discountValue: z.string().optional(),
+          startDate: z.date(),
+          endDate: z.date(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await createPromotion(input);
+      }),
+    update: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          title: z.string().optional(),
+          description: z.string().optional(),
+          imageUrl: z.string().optional(),
+          discountPercentage: z.number().optional(),
+          discountValue: z.string().optional(),
+          startDate: z.date().optional(),
+          endDate: z.date().optional(),
+          isActive: z.boolean().optional(),
+          sortOrder: z.number().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updatePromotion(id, data);
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await deletePromotion(input.id);
+        return { success: true };
+      }),
+    uploadImage: adminProcedure
+      .input(z.object({ base64: z.string(), mimeType: z.string() }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.base64, "base64");
+        const ext = input.mimeType.split("/")[1] || "jpg";
+        const key = `promotions/${nanoid(12)}.${ext}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        return { url };
       }),
   }),
 });

@@ -3,12 +3,14 @@ import { drizzle } from "drizzle-orm/mysql2";
 import {
   cartItems,
   categories,
+  companyInfo,
   deliveries,
   InsertUser,
   orderItems,
   orders,
   productStock,
   products,
+  promotions,
   shopSettings,
   stockItems,
   users,
@@ -663,4 +665,131 @@ export function isShopOpen(settings: any): boolean {
   }
   
   return currentTimeNum >= openTimeNum && currentTimeNum < closeTimeNum;
+}
+
+
+// ─── Company Info ─────────────────────────────────────────────────────────────
+export async function getCompanyInfo() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(companyInfo).limit(1);
+  return result[0] || null;
+}
+
+export async function updateCompanyInfo(data: {
+  name?: string;
+  logoUrl?: string;
+  description?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get or create company info
+  let company = await getCompanyInfo();
+  if (!company) {
+    await db.insert(companyInfo).values({ name: "LV BURGER" });
+    company = await getCompanyInfo();
+  }
+  
+  if (!company) return null;
+  
+  const updated = await db
+    .update(companyInfo)
+    .set(data)
+    .where(eq(companyInfo.id, company.id));
+  
+  return getCompanyInfo();
+}
+
+// ─── Promotions ───────────────────────────────────────────────────────────────
+export async function getAllPromotions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(promotions).orderBy(promotions.sortOrder, promotions.createdAt);
+}
+
+export async function getActivePromotions() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return db
+    .select()
+    .from(promotions)
+    .where(
+      and(
+        eq(promotions.isActive, true),
+        lte(promotions.startDate, now),
+        gte(promotions.endDate, now)
+      )
+    )
+    .orderBy(promotions.sortOrder, promotions.createdAt);
+}
+
+export async function createPromotion(data: {
+  title: string;
+  description: string;
+  imageUrl?: string;
+  discountPercentage?: number;
+  discountValue?: string;
+  startDate: Date;
+  endDate: Date;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db.insert(promotions).values({
+    ...data,
+    isActive: true,
+    sortOrder: 0,
+  });
+  
+  const created = await db
+    .select()
+    .from(promotions)
+    .where(eq(promotions.title, data.title))
+    .orderBy(desc(promotions.createdAt))
+    .limit(1);
+  
+  return created[0] || null;
+}
+
+export async function updatePromotion(
+  id: number,
+  data: {
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    discountPercentage?: number;
+    discountValue?: string;
+    startDate?: Date;
+    endDate?: Date;
+    isActive?: boolean;
+    sortOrder?: number;
+  }
+) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  await db.update(promotions).set(data).where(eq(promotions.id, id));
+  
+  const result = await db.select().from(promotions).where(eq(promotions.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function deletePromotion(id: number) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const result = await db.delete(promotions).where(eq(promotions.id, id));
+  return true;
+}
+
+export async function getPromotionById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(promotions).where(eq(promotions.id, id)).limit(1);
+  return result[0] || null;
 }

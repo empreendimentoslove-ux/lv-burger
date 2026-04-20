@@ -107,3 +107,18 @@
 - [x] Invalidação de queries ao reconectar
 - [x] Logs detalhados de conexão e desconexão
 - [x] Todos os 31 testes passando (100% sucesso)
+
+## Configurações da Empresa (v6)
+
+- [x] Adicionar tabela de anúncios de promoções no banco de dados
+- [x] Criar endpoints tRPC para CRUD de anúncios
+- [x] Criar endpoints tRPC para gerenciar configurações da empresa
+- [x] Implementar página de Configurações da Empresa no admin
+- [x] Adicionar editor de logo da empresa
+- [x] Adicionar editor de nome da empresa
+- [x] Adicionar gerenciador de horários (aberto/fechado, horários de funcionamento)
+- [x] Adicionar gerenciador de anúncios de promoções
+- [x] Adicionar link de Configurações no dashboard admin
+- [x] Executar migration para criar tabelas no banco de dados
+- [x] Testar todas as funcionalidades (37 testes passando)
+- [ ] Adicionar widget de anúncios na tela principal do cliente

@@ -170,3 +170,37 @@ export const shopSettings = mysqlTable("shop_settings", {
 });
 
 export type ShopSettings = typeof shopSettings.$inferSelect;
+
+// ─── Promotions ──────────────────────────────────────────────────────────────
+export const promotions = mysqlTable("promotions", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("imageUrl"),
+  discountPercentage: int("discountPercentage"),
+  discountValue: decimal("discountValue", { precision: 10, scale: 2 }),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Promotion = typeof promotions.$inferSelect;
+export type InsertPromotion = typeof promotions.$inferInsert;
+
+// ─── Company Info ────────────────────────────────────────────────────────────
+export const companyInfo = mysqlTable("company_info", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).default("LV BURGER").notNull(),
+  logoUrl: text("logoUrl"),
+  description: text("description"),
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  address: text("address"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CompanyInfo = typeof companyInfo.$inferSelect;
+export type InsertCompanyInfo = typeof companyInfo.$inferInsert;
