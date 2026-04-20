@@ -34,6 +34,7 @@ export default function AdminProducts() {
   });
   const deleteMutation = trpc.products.delete.useMutation({
     onSuccess: () => { utils.products.listAll.invalidate(); toast.success("Produto removido!"); },
+    onError: (e) => toast.error(e.message),
   });
   const toggleMutation = trpc.products.update.useMutation({
     onSuccess: () => utils.products.listAll.invalidate(),
@@ -45,12 +46,33 @@ export default function AdminProducts() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.price || !form.categoryId) { toast.error("Preencha nome, preço e categoria"); return; }
+    
+    let imageUrl = form.imageUrl;
+    
+    // Se a imagem for base64 (upload direto), fazer upload para S3
+    if (form.imageUrl?.startsWith('data:')) {
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageData: form.imageUrl, fileName: `product-${Date.now()}.jpg` })
+        });
+        const data = await response.json();
+        imageUrl = data.url;
+      } catch (error) {
+        toast.error("Erro ao fazer upload da imagem");
+        return;
+      }
+    }
+    
+    const dataToSend = { ...form, imageUrl };
+    
     if (editId) {
-      updateMutation.mutate({ id: editId, ...form });
+      updateMutation.mutate({ id: editId, ...dataToSend });
     } else {
-      createMutation.mutate(form);
+      createMutation.mutate(dataToSend);
     }
   };
 
@@ -94,7 +116,6 @@ export default function AdminProducts() {
               {[
                 { key: "name", label: "Nome *", placeholder: "Ex: LV Classic" },
                 { key: "price", label: "Preço *", placeholder: "Ex: 29.90" },
-                { key: "imageUrl", label: "URL da Imagem", placeholder: "https://..." },
               ].map((f) => (
                 <div key={f.key}>
                   <label className="text-[#888] text-xs mb-1 block">{f.label}</label>
@@ -107,6 +128,29 @@ export default function AdminProducts() {
                 </div>
               ))}
               <div>
+                <label className="text-[#888] text-xs mb-1 block">Foto do Produto</label>
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setForm({ ...form, imageUrl: event.target?.result as string });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="flex-1 bg-[#0a0a0a] border border-[#222] rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-[#c0392b] file:text-[#d4af37] file:bg-transparent file:border-0 file:cursor-pointer"
+                  />
+                </div>
+                {form.imageUrl && form.imageUrl.startsWith('data:') && (
+                  <img src={form.imageUrl} alt="Preview" className="w-full h-32 rounded-xl object-cover mt-2" />
+                )}
+              </div>
+              <div>
                 <label className="text-[#888] text-xs mb-1 block">Descrição</label>
                 <textarea
                   value={form.description}
@@ -118,9 +162,9 @@ export default function AdminProducts() {
               <button
                 onClick={handleSave}
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="w-full bg-[#c0392b] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 mt-2"
+                className="w-full bg-[#c0392b] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
               >
-                <Save size={16} /> {editId ? "Salvar Alterações" : "Criar Produto"}
+                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : <><Save size={16} /> {editId ? "Salvar Alterações" : "Criar Produto"}</> }
               </button>
             </div>
           </div>

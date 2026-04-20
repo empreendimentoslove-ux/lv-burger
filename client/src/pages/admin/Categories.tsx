@@ -18,12 +18,15 @@ export default function AdminCategories() {
 
   const createMutation = trpc.categories.create.useMutation({
     onSuccess: () => { utils.categories.listAll.invalidate(); setShowForm(false); setForm(EMPTY); toast.success("Categoria criada!"); },
+    onError: (e) => toast.error(e.message),
   });
   const updateMutation = trpc.categories.update.useMutation({
     onSuccess: () => { utils.categories.listAll.invalidate(); setShowForm(false); setEditId(null); toast.success("Categoria atualizada!"); },
+    onError: (e) => toast.error(e.message),
   });
   const deleteMutation = trpc.categories.delete.useMutation({
     onSuccess: () => { utils.categories.listAll.invalidate(); toast.success("Categoria removida!"); },
+    onError: (e) => toast.error(e.message),
   });
 
   const handleEdit = (c: any) => {
@@ -79,9 +82,9 @@ export default function AdminCategories() {
               <button
                 onClick={handleSave}
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="w-full bg-[#c0392b] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 mt-2"
+                className="w-full bg-[#c0392b] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
               >
-                <Save size={16} /> {editId ? "Salvar" : "Criar"}
+                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : <><Save size={16} /> {editId ? "Salvar" : "Criar"}</> }
               </button>
             </div>
           </div>

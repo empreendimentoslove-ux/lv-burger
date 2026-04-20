@@ -111,8 +111,7 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        await createCategory(input);
-        return { success: true };
+        return await createCategory(input);
       }),
     update: adminProcedure
       .input(
@@ -127,8 +126,7 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        await updateCategory(id, data);
-        return { success: true };
+        return await updateCategory(id, data);
       }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await deleteCategory(input.id);
@@ -155,8 +153,7 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        await createProduct(input);
-        return { success: true };
+        return await createProduct(input);
       }),
     update: adminProcedure
       .input(
@@ -174,8 +171,7 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        await updateProduct(id, data);
-        return { success: true };
+        return await updateProduct(id, data);
       }),
     delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await deleteProduct(input.id);

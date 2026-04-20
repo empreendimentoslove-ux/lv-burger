@@ -113,8 +113,11 @@ export async function createCategory(data: {
   sortOrder?: number;
 }) {
   const db = await getDb();
-  if (!db) return;
-  await db.insert(categories).values(data);
+  if (!db) return undefined;
+  const result = await db.insert(categories).values(data);
+  // Get the last inserted ID
+  const inserted = await db.select().from(categories).where(eq(categories.slug, data.slug)).limit(1);
+  return inserted[0];
 }
 
 export async function updateCategory(
@@ -122,8 +125,10 @@ export async function updateCategory(
   data: { name?: string; description?: string; imageUrl?: string; sortOrder?: number; active?: boolean }
 ) {
   const db = await getDb();
-  if (!db) return;
+  if (!db) return undefined;
   await db.update(categories).set(data).where(eq(categories.id, id));
+  const result = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
+  return result[0];
 }
 
 export async function deleteCategory(id: number) {
@@ -167,8 +172,11 @@ export async function createProduct(data: {
   sortOrder?: number;
 }) {
   const db = await getDb();
-  if (!db) return;
-  await db.insert(products).values(data);
+  if (!db) return undefined;
+  const result = await db.insert(products).values(data);
+  // Get the last inserted ID by finding the product with matching name and categoryId
+  const inserted = await db.select().from(products).where(eq(products.name, data.name)).orderBy(desc(products.id)).limit(1);
+  return inserted[0];
 }
 
 export async function updateProduct(
@@ -185,8 +193,10 @@ export async function updateProduct(
   }
 ) {
   const db = await getDb();
-  if (!db) return;
+  if (!db) return undefined;
   await db.update(products).set(data).where(eq(products.id, id));
+  const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  return result[0];
 }
 
 export async function deleteProduct(id: number) {

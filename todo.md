@@ -73,3 +73,14 @@
 - [x] Bloqueio de pedidos quando loja fechada
 - [x] Localização automática no checkout
 - [x] Comprovante de pagamento com upload de foto
+
+## Correções de CRUD (v3)
+
+- [x] Corrigido erro de duplicate 'useState' import em Products.tsx
+- [x] Implementado endpoint `/api/upload` para upload de imagens em base64
+- [x] Adicionado upload de foto direto da galeria no formulário de produtos
+- [x] Corrigido retorno de dados nas operações de CREATE (categorias e produtos)
+- [x] Corrigido retorno de dados nas operações de UPDATE (categorias e produtos)
+- [x] Adicionado error handling em todas as mutações (create, update, delete)
+- [x] Implementados 9 testes de CRUD para produtos e categorias
+- [x] Todos os 29 testes passando (100% sucesso)
