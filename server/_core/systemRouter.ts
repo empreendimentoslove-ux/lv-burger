@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { notifyOwner } from "./notification";
 import { adminProcedure, publicProcedure, router } from "./trpc";
+import { getDb } from "../db";
 
 export const systemRouter = router({
   health: publicProcedure
@@ -9,9 +10,25 @@ export const systemRouter = router({
         timestamp: z.number().min(0, "timestamp cannot be negative"),
       })
     )
-    .query(() => ({
-      ok: true,
-    })),
+    .query(async () => {
+      try {
+        const db = await getDb();
+        const isDbHealthy = db !== null;
+        return {
+          ok: true,
+          database: isDbHealthy ? "connected" : "disconnected",
+          timestamp: Date.now(),
+        };
+      } catch (error) {
+        console.error("[Health Check] Error:", error);
+        return {
+          ok: false,
+          database: "error",
+          timestamp: Date.now(),
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    }),
 
   notifyOwner: adminProcedure
     .input(

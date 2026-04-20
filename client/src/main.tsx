@@ -25,6 +25,12 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 60, // 1 hour
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
+      retryDelay: 1000,
     },
   },
 });
@@ -76,9 +82,69 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+// Health check to detect server disconnections
+let healthCheckInterval: NodeJS.Timeout | null = null;
+let isServerHealthy = true;
+
+const startHealthCheck = () => {
+  if (healthCheckInterval) return;
+  
+  healthCheckInterval = setInterval(async () => {
+    try {
+      const response = await fetch("/api/trpc?batch=1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([{
+          0: { path: "system.health", input: { timestamp: Date.now() } }
+        }]),
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        if (!isServerHealthy) return;
+        isServerHealthy = false;
+        console.warn("[Health Check] Server connection lost");
+        const event = new CustomEvent("serverDisconnected");
+        window.dispatchEvent(event);
+      } else {
+        if (isServerHealthy) return;
+        isServerHealthy = true;
+        console.log("[Health Check] Server connection restored");
+        queryClient.invalidateQueries();
+        const event = new CustomEvent("serverReconnected");
+        window.dispatchEvent(event);
+      }
+    } catch (error) {
+      if (!isServerHealthy) return;
+      isServerHealthy = false;
+      console.warn("[Health Check] Connection error:", error);
+      const event = new CustomEvent("serverDisconnected");
+      window.dispatchEvent(event);
+    }
+  }, 10000); // Check every 10 seconds
+};
+
 if (typeof window !== "undefined") {
+  startHealthCheck();
+  
   window.addEventListener("focus", () => {
     queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+  });
+  
+  // Listen for network status changes
+  window.addEventListener("online", () => {
+    console.log("[Network] Connection restored");
+    isServerHealthy = true;
+    queryClient.invalidateQueries();
+    const event = new CustomEvent("serverReconnected");
+    window.dispatchEvent(event);
+  });
+  
+  window.addEventListener("offline", () => {
+    console.warn("[Network] Connection lost");
+    isServerHealthy = false;
+    const event = new CustomEvent("serverDisconnected");
+    window.dispatchEvent(event);
   });
 }
 

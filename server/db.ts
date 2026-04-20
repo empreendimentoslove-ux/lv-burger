@@ -16,17 +16,58 @@ import {
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _lastConnectionAttempt = 0;
+const CONNECTION_RETRY_DELAY = 5000; // 5 seconds
+const MAX_RETRY_ATTEMPTS = 3;
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL) {
+    console.error("[Database] DATABASE_URL not set");
+    return null;
+  }
+
+  // If we have a connection, try to use it
+  if (_db) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // Test the connection with a simple query
+      await _db.select().from(users).limit(1);
+      return _db;
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.warn("[Database] Connection lost, attempting to reconnect:", error);
       _db = null;
     }
   }
-  return _db;
+
+  // Prevent rapid reconnection attempts
+  const now = Date.now();
+  if (now - _lastConnectionAttempt < CONNECTION_RETRY_DELAY) {
+    console.warn("[Database] Reconnection attempt too soon, waiting...");
+    return null;
+  }
+
+  _lastConnectionAttempt = now;
+
+  // Try to establish a new connection
+  let attempts = 0;
+  while (attempts < MAX_RETRY_ATTEMPTS) {
+    try {
+      _db = drizzle(process.env.DATABASE_URL);
+      // Test the connection
+      await _db.select().from(users).limit(1);
+      console.log("[Database] Successfully connected");
+      return _db;
+    } catch (error) {
+      attempts++;
+      console.warn(`[Database] Connection attempt ${attempts}/${MAX_RETRY_ATTEMPTS} failed:`, error);
+      if (attempts < MAX_RETRY_ATTEMPTS) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  }
+
+  console.error("[Database] Failed to connect after", MAX_RETRY_ATTEMPTS, "attempts");
+  _db = null;
+  return null;
 }
 
 // ─── Users ────────────────────────────────────────────────────────────────────

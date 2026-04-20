@@ -92,3 +92,18 @@
 - [x] Botão de deletar agora remove itens da lista corretamente
 - [x] Implementados 2 testes de delete (produtos e categorias)
 - [x] Todos os 31 testes passando (100% sucesso)
+
+## Melhorias de Estabilidade (v5)
+
+- [x] Implementado sistema robusto de reconexão com banco de dados
+- [x] Retry automático com 3 tentativas e delay progressivo (1s entre tentativas)
+- [x] Health check endpoint aprimorado com status do banco de dados
+- [x] Health check periódico no frontend (a cada 10 segundos)
+- [x] Detecção automática de desconexões do servidor
+- [x] Reconexão automática quando servidor volta online
+- [x] Retry automático de queries (3 tentativas com backoff exponencial)
+- [x] Retry automático de mutations (1 tentativa com delay 1s)
+- [x] Listeners para eventos de rede (online/offline)
+- [x] Invalidação de queries ao reconectar
+- [x] Logs detalhados de conexão e desconexão
+- [x] Todos os 31 testes passando (100% sucesso)
