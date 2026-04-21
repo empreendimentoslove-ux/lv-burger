@@ -177,3 +177,14 @@
 - [x] Adicionar gradiente de fundo para melhor contraste do botão
 - [x] Remover max-w-md para botão ocupar 100% da largura
 - [x] Adicionar touch-manipulation para melhor UX em mobile
+
+## CRÍTICO: Expiração de Sessão e Indisponibilidade (v12 - BLOQUEADOR)
+
+- [ ] Investigar por que a sessão expira frequentemente
+- [ ] Implementar session persistence com localStorage
+- [ ] Adicionar refresh automático de token antes de expirar
+- [ ] Implementar retry automático com exponential backoff
+- [ ] Adicionar monitoramento contínuo de saúde do servidor (heartbeat a cada 5s)
+- [ ] Implementar auto-reconnect com notificação visual
+- [ ] Adicionar fallback para modo offline com cache de dados
+- [ ] Testar estabilidade por 1 hora contínua sem desconexões

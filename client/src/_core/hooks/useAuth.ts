@@ -14,7 +14,8 @@ export function useAuth(options?: UseAuthOptions) {
   const utils = trpc.useUtils();
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: 1,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000),
     refetchOnWindowFocus: true,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -67,14 +68,19 @@ export function useAuth(options?: UseAuthOptions) {
     if (state.user) return;
     if (typeof window === "undefined") return;
     if (window.location.pathname === redirectPath) return;
-
-    window.location.href = redirectPath
+    
+    // Only redirect if it's an actual auth error, not a connection error
+    const error = meQuery.error;
+    if (error && error.message && error.message.includes("Please login")) {
+      window.location.href = redirectPath;
+    }
   }, [
     redirectOnUnauthenticated,
     redirectPath,
     logoutMutation.isPending,
     meQuery.isLoading,
     state.user,
+    meQuery.error,
   ]);
 
   return {
