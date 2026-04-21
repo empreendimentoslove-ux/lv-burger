@@ -117,24 +117,31 @@ export const appRouter = router({
       .input(
         z.object({
           name: z.string().min(1),
+          slug: z.string().min(1),
           description: z.string().optional(),
+          imageUrl: z.string().optional(),
+          sortOrder: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        return await createCategory(input.name, input.description || '');
+        return await createCategory(input);
       }),
     update: adminProcedure
       .input(
         z.object({
-          id: z.string(),
+          id: z.number(),
           name: z.string().optional(),
           description: z.string().optional(),
+          imageUrl: z.string().optional(),
+          sortOrder: z.number().optional(),
+          active: z.boolean().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        return await updateCategory(input.id, input.name || '', input.description || '');
+        const { id, ...data } = input;
+        return await updateCategory(id, data);
       }),
-    delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await deleteCategory(input.id);
       return { success: true };
     }),
@@ -142,40 +149,44 @@ export const appRouter = router({
 
   // ─── Products ──────────────────────────────────────────────────────────────
   products: router({
-    list: publicProcedure.input(z.object({ categoryId: z.string().optional() }).optional()).query(({ input }) =>
-      getAllProducts()
+    list: publicProcedure.input(z.object({ categoryId: z.number().optional() }).optional()).query(({ input }) =>
+      getProducts(input?.categoryId)
     ),
     listAll: adminProcedure.query(() => getAllProducts()),
-    getById: publicProcedure.input(z.object({ id: z.string() })).query(({ input }) => getProductById(input.id)),
+    getById: publicProcedure.input(z.object({ id: z.number() })).query(({ input }) => getProductById(input.id)),
     create: adminProcedure
       .input(
         z.object({
-          categoryId: z.string(),
+          categoryId: z.number(),
           name: z.string().min(1),
           description: z.string().optional(),
-          price: z.number(),
+          price: z.string(),
           imageUrl: z.string().optional(),
+          sortOrder: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        return await createProduct(input.categoryId, input.name, input.description || '', input.price, input.imageUrl || '');
+        return await createProduct(input);
       }),
     update: adminProcedure
       .input(
         z.object({
-          id: z.string(),
-          categoryId: z.string().optional(),
+          id: z.number(),
+          categoryId: z.number().optional(),
           name: z.string().optional(),
           description: z.string().optional(),
-          price: z.number().optional(),
+          price: z.string().optional(),
           imageUrl: z.string().optional(),
+          active: z.boolean().optional(),
+          blocked: z.boolean().optional(),
+          sortOrder: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        const { id, categoryId, name, description, price, imageUrl } = input;
-        return await updateProduct(id, categoryId || '', name || '', description || '', price || 0, imageUrl || '');
+        const { id, ...data } = input;
+        return await updateProduct(id, data);
       }),
-    delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await deleteProduct(input.id);
       return { success: true };
     }),
@@ -193,13 +204,13 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        await addCartItem(ctx.user.id, input.productId, input.quantity);
+        await addCartItem(ctx.user.id, input.productId, input.quantity, input.notes);
         return { success: true };
       }),
     update: protectedProcedure
-      .input(z.object({ id: z.string(), quantity: z.number().min(0) }))
+      .input(z.object({ id: z.number(), quantity: z.number().min(0), notes: z.string().optional() }))
       .mutation(async ({ ctx, input }) => {
-        await updateCartItem(input.id, input.quantity);
+        await updateCartItem(input.id, ctx.user.id, input.quantity, input.notes);
         return { success: true };
       }),
     clear: protectedProcedure.mutation(({ ctx }) => clearCart(ctx.user.id)),
@@ -220,38 +231,41 @@ export const appRouter = router({
           notes: z.string().optional(),
           items: z.array(
             z.object({
-              productId: z.string(),
+              productId: z.number(),
+              productName: z.string(),
+              productPrice: z.string(),
               quantity: z.number().min(1),
+              notes: z.string().optional(),
+              subtotal: z.string(),
             })
           ),
-          totalPrice: z.number(),
-          status: z.string(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         // Check if shop is open
-        if (!await isShopOpen()) {
+        const settings = await getShopSettings();
+        if (!isShopOpen(settings)) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Loja fechada no momento. Pedidos não podem ser realizados." });
         }
-        const order = await createOrder(ctx.user.id, input.totalPrice, input.status, input.items);
+        const order = await createOrder({ ...input, userId: ctx.user.id });
         await clearCart(ctx.user.id);
-        return { id: order };
+        return order;
       }),
     myOrders: protectedProcedure.query(({ ctx }) => getOrdersByUser(ctx.user.id)),
-    getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
       const order = await getOrderById(input.id);
       if (!order) throw new TRPCError({ code: "NOT_FOUND" });
-      if ((order as any).userId !== ctx.user.id && ctx.user.role !== "admin" && ctx.user.role !== "motoboy")
+      if (order.userId !== ctx.user.id && ctx.user.role !== "admin" && ctx.user.role !== "motoboy")
         throw new TRPCError({ code: "FORBIDDEN" });
-      const items = await getOrderItems((order as any).id);
-      const delivery = await getDeliveryByOrderId((order as any).id);
+      const items = await getOrderItems(order.id);
+      const delivery = await getDeliveryByOrderId(order.id);
       return { ...order, items, delivery };
     }),
     listAll: adminProcedure.query(() => getAllOrders()),
     updateStatus: adminProcedure
       .input(
         z.object({
-          id: z.string(),
+          id: z.number(),
           status: z.enum(["pending_payment", "confirmed", "preparing", "ready", "out_for_delivery", "delivered", "cancelled"]),
         })
       )
@@ -264,24 +278,43 @@ export const appRouter = router({
   // ─── Deliveries ────────────────────────────────────────────────────────────
   deliveries: router({
     available: motoboyProcedure.query(async () => {
-      return [];
+      const delivs = await getAvailableDeliveries();
+      const enriched = await Promise.all(
+        delivs.map(async (d) => {
+          const order = await getOrderById(d.orderId);
+          const items = order ? await getOrderItems(order.id) : [];
+          return { ...d, order, items };
+        })
+      );
+      return enriched;
     }),
     myDeliveries: motoboyProcedure.query(async ({ ctx }) => {
-      return [];
+      const delivs = await getDeliveriesByMotoboy(ctx.user.id);
+      const enriched = await Promise.all(
+        delivs.map(async (d) => {
+          const order = await getOrderById(d.orderId);
+          const items = order ? await getOrderItems(order.id) : [];
+          return { ...d, order, items };
+        })
+      );
+      return enriched;
     }),
     accept: motoboyProcedure
-      .input(z.object({ deliveryId: z.string() }))
+      .input(z.object({ deliveryId: z.number() }))
       .mutation(async ({ ctx, input }) => {
+        await acceptDelivery(input.deliveryId, ctx.user.id);
         return { success: true };
       }),
     startRoute: motoboyProcedure
-      .input(z.object({ deliveryId: z.string() }))
+      .input(z.object({ deliveryId: z.number() }))
       .mutation(async ({ ctx, input }) => {
+        await startDeliveryRoute(input.deliveryId, ctx.user.id);
         return { success: true };
       }),
     confirm: motoboyProcedure
-      .input(z.object({ deliveryId: z.string(), code: z.string().length(6) }))
+      .input(z.object({ deliveryId: z.number(), code: z.string().length(6) }))
       .mutation(async ({ ctx, input }) => {
+        await confirmDelivery(input.deliveryId, ctx.user.id, input.code);
         return { success: true };
       }),
   }),
@@ -296,7 +329,7 @@ export const appRouter = router({
     }),
     listAll: adminProcedure.query(() => getAllUsers()),
     updateRole: adminProcedure
-      .input(z.object({ userId: z.string(), role: z.enum(["customer", "motoboy", "admin"]) }))
+      .input(z.object({ userId: z.number(), role: z.enum(["customer", "motoboy", "admin"]) }))
       .mutation(async ({ input }) => {
         await updateUserRole(input.userId, input.role);
         return { success: true };
@@ -305,7 +338,7 @@ export const appRouter = router({
 
   // ─── Reports ───────────────────────────────────────────────────────────────
   reports: router({
-    daily: adminProcedure.query(async () => getDailyReport(new Date())),
+    daily: adminProcedure.query(() => getDailyReport()),
     sales: adminProcedure
       .input(z.object({ startDate: z.string(), endDate: z.string() }))
       .query(async ({ input }) => {
@@ -320,7 +353,8 @@ export const appRouter = router({
   shop: router({
     settings: publicProcedure.query(() => getShopSettings()),
     isOpen: publicProcedure.query(async () => {
-      return isShopOpen();
+      const settings = await getShopSettings();
+      return isShopOpen(settings);
     }),
     updateSettings: adminProcedure
       .input(z.object({ isOpen: z.boolean().optional(), openTime: z.string().optional(), closeTime: z.string().optional(), operatingDays: z.string().optional() }))
@@ -343,16 +377,21 @@ export const appRouter = router({
       .input(
         z.object({
           name: z.string().optional(),
-          logo: z.string().optional(),
+          logoUrl: z.string().optional(),
           description: z.string().optional(),
           phone: z.string().optional(),
           email: z.string().optional(),
           address: z.string().optional(),
-          businessHours: z.any().optional(),
+          businessHours: z.array(z.object({
+            dayOfWeek: z.number(),
+            isOpen: z.boolean(),
+            openTime: z.string(),
+            closeTime: z.string(),
+          })).optional(),
         })
       )
       .mutation(async ({ input }) => {
-        return await updateCompanyInfo(input as any);
+        return await updateCompanyInfo(input);
       }),
     uploadLogo: adminProcedure
       .input(z.object({ base64: z.string(), mimeType: z.string() }))
@@ -361,7 +400,7 @@ export const appRouter = router({
         const ext = input.mimeType.split("/")[1] || "jpg";
         const key = `company/logo-${nanoid(8)}.${ext}`;
         const { url } = await storagePut(key, buffer, input.mimeType);
-        await updateCompanyInfo({ logo: url });
+        await updateCompanyInfo({ logoUrl: url });
         return { url };
       }),
   }),
@@ -375,7 +414,7 @@ export const appRouter = router({
       return await getActivePromotions();
     }),
     getById: publicProcedure
-      .input(z.object({ id: z.string() }))
+      .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return await getPromotionById(input.id);
       }),
@@ -384,8 +423,9 @@ export const appRouter = router({
         z.object({
           title: z.string().min(1),
           description: z.string().min(1),
-          imageUrl: z.string(),
-          discount: z.number(),
+          imageUrl: z.string().optional(),
+          discountPercentage: z.number().optional(),
+          discountValue: z.string().optional(),
           startDate: z.date(),
           endDate: z.date(),
         })
@@ -396,21 +436,24 @@ export const appRouter = router({
     update: adminProcedure
       .input(
         z.object({
-          id: z.string(),
+          id: z.number(),
           title: z.string().optional(),
           description: z.string().optional(),
           imageUrl: z.string().optional(),
-          discount: z.number().optional(),
+          discountPercentage: z.number().optional(),
+          discountValue: z.string().optional(),
           startDate: z.date().optional(),
           endDate: z.date().optional(),
+          isActive: z.boolean().optional(),
+          sortOrder: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        return await updatePromotion(id, data as any);
+        return await updatePromotion(id, data);
       }),
     delete: adminProcedure
-      .input(z.object({ id: z.string() }))
+      .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await deletePromotion(input.id);
         return { success: true };
@@ -432,28 +475,31 @@ export const appRouter = router({
       return await getAllStock();
     }),
     getByProductId: adminProcedure
-      .input(z.object({ productId: z.string() }))
+      .input(z.object({ productId: z.number() }))
       .query(async ({ input }) => {
         return await getStockByProductId(input.productId);
       }),
     create: adminProcedure
       .input(z.object({
-        productId: z.string(),
+        productId: z.number(),
         quantity: z.number().min(0),
+        minQuantity: z.number().min(0).optional(),
       }))
       .mutation(async ({ input }) => {
-        return await createStock(input.productId, input.quantity);
+        return await createStock(input);
       }),
     update: adminProcedure
       .input(z.object({
-        id: z.string(),
-        quantity: z.number().min(0),
+        id: z.number(),
+        quantity: z.number().min(0).optional(),
+        minQuantity: z.number().min(0).optional(),
       }))
       .mutation(async ({ input }) => {
-        return await updateStock(input.id, input.quantity);
+        const { id, ...data } = input;
+        return await updateStock(id, data);
       }),
     delete: adminProcedure
-      .input(z.object({ id: z.string() }))
+      .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return await deleteStock(input.id);
       }),
