@@ -65,14 +65,14 @@ async function startServer() {
     next();
   });
   
-  // Request timeout middleware (30 seconds)
+  // Request timeout middleware (60 seconds)
   app.use((req, res, next) => {
     const timeout = setTimeout(() => {
       if (!res.headersSent) {
         res.status(408).json({ error: "Request timeout" });
       }
       req.socket.destroy();
-    }, 30000);
+    }, 60000);
     
     res.on("finish", () => clearTimeout(timeout));
     res.on("close", () => clearTimeout(timeout));
