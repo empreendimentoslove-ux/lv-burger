@@ -5,6 +5,7 @@ import {
   categories,
   companyInfo,
   deliveries,
+  deliveryZones,
   InsertUser,
   orderItems,
   orders,
@@ -834,5 +835,104 @@ export async function deleteStock(id: number) {
   const db = await getDb();
   if (!db) return { success: false };
   await db.delete(stock).where(eq(stock.id, id));
+  return { success: true };
+}
+
+
+// ─── Delivery Zones ─────────────────────────────────────────────────────────
+
+export async function getAllDeliveryZones() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db
+    .select()
+    .from(deliveryZones)
+    .where(eq(deliveryZones.active, true))
+    .orderBy(deliveryZones.sortOrder);
+  return result;
+}
+
+export async function getDeliveryZoneByDistance(distanceKm: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(deliveryZones)
+    .where(
+      and(
+        eq(deliveryZones.active, true),
+        lte(deliveryZones.minDistance, distanceKm.toString()),
+        gte(deliveryZones.maxDistance, distanceKm.toString())
+      )
+    )
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function calculateDeliveryFee(distanceKm: number): Promise<{ fee: string; estimatedMinutes: number } | null> {
+  const zone = await getDeliveryZoneByDistance(distanceKm);
+  if (!zone) return null;
+  
+  // Fórmula: taxa base + (distância * taxa por km)
+  const fee = parseFloat(zone.baseFee.toString()) + (distanceKm * parseFloat(zone.perKmFee.toString()));
+  
+  return {
+    fee: fee.toFixed(2),
+    estimatedMinutes: zone.estimatedMinutes,
+  };
+}
+
+export async function createDeliveryZone(data: {
+  name: string;
+  minDistance: number;
+  maxDistance: number;
+  baseFee: number;
+  perKmFee: number;
+  estimatedMinutes: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(deliveryZones).values({
+    name: data.name,
+    minDistance: data.minDistance.toString(),
+    maxDistance: data.maxDistance.toString(),
+    baseFee: data.baseFee.toString(),
+    perKmFee: data.perKmFee.toString(),
+    estimatedMinutes: data.estimatedMinutes,
+    active: true,
+  });
+  return result;
+}
+
+export async function updateDeliveryZone(id: number, data: Partial<{
+  name: string;
+  minDistance: number;
+  maxDistance: number;
+  baseFee: number;
+  perKmFee: number;
+  estimatedMinutes: number;
+  active: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const updateData: any = {};
+  if (data.name) updateData.name = data.name;
+  if (data.minDistance !== undefined) updateData.minDistance = data.minDistance.toString();
+  if (data.maxDistance !== undefined) updateData.maxDistance = data.maxDistance.toString();
+  if (data.baseFee !== undefined) updateData.baseFee = data.baseFee.toString();
+  if (data.perKmFee !== undefined) updateData.perKmFee = data.perKmFee.toString();
+  if (data.estimatedMinutes !== undefined) updateData.estimatedMinutes = data.estimatedMinutes;
+  if (data.active !== undefined) updateData.active = data.active;
+  
+  await db.update(deliveryZones).set(updateData).where(eq(deliveryZones.id, id));
+  const result = await db.select().from(deliveryZones).where(eq(deliveryZones.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function deleteDeliveryZone(id: number) {
+  const db = await getDb();
+  if (!db) return { success: false };
+  await db.delete(deliveryZones).where(eq(deliveryZones.id, id));
   return { success: true };
 }

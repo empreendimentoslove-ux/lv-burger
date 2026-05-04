@@ -218,3 +218,21 @@ export const stock = mysqlTable("stock", {
 
 export type Stock = typeof stock.$inferSelect;
 export type InsertStock = typeof stock.$inferInsert;
+
+// ─── Delivery Zones ───────────────────────────────────────────────────────────
+export const deliveryZones = mysqlTable("delivery_zones", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // ex: "Centro", "Zona Norte"
+  minDistance: decimal("minDistance", { precision: 10, scale: 2 }).notNull(), // km
+  maxDistance: decimal("maxDistance", { precision: 10, scale: 2 }).notNull(), // km
+  baseFee: decimal("baseFee", { precision: 10, scale: 2 }).notNull(), // taxa base
+  perKmFee: decimal("perKmFee", { precision: 10, scale: 2 }).notNull(), // taxa por km
+  estimatedMinutes: int("estimatedMinutes").notNull(), // tempo estimado de entrega
+  active: boolean("active").default(true).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DeliveryZone = typeof deliveryZones.$inferSelect;
+export type InsertDeliveryZone = typeof deliveryZones.$inferInsert;

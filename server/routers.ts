@@ -7,19 +7,23 @@ import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   acceptDelivery,
   addCartItem,
+  calculateDeliveryFee,
   clearCart,
   confirmDelivery,
   createCategory,
+  createDeliveryZone,
   createOrder,
   createProduct,
   createPromotion,
   createStock,
   createStockItem,
   deleteCategory,
+  deleteDeliveryZone,
   deleteProduct,
   deletePromotion,
   deleteStock,
   getAllCategories,
+  getAllDeliveryZones,
   getAllOrders,
   getAllProducts,
   getAllPromotions,
@@ -48,6 +52,7 @@ import {
   updateCartItem,
   updateCategory,
   updateCompanyInfo,
+  updateDeliveryZone,
   updateOrderStatus,
   updateProduct,
   updatePromotion,
@@ -502,6 +507,50 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return await deleteStock(input.id);
+      }),
+  }),
+
+  // ─── Delivery Zones ────────────────────────────────────────────────────────
+  deliveryZones: router({
+    getAll: publicProcedure.query(async () => {
+      return await getAllDeliveryZones();
+    }),
+    calculateFee: publicProcedure
+      .input(z.object({ distanceKm: z.number().min(0) }))
+      .query(async ({ input }) => {
+        return await calculateDeliveryFee(input.distanceKm);
+      }),
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        minDistance: z.number().min(0),
+        maxDistance: z.number().min(0),
+        baseFee: z.number().min(0),
+        perKmFee: z.number().min(0),
+        estimatedMinutes: z.number().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        return await createDeliveryZone(input);
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        minDistance: z.number().optional(),
+        maxDistance: z.number().optional(),
+        baseFee: z.number().optional(),
+        perKmFee: z.number().optional(),
+        estimatedMinutes: z.number().optional(),
+        active: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updateDeliveryZone(id, data);
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteDeliveryZone(input.id);
       }),
   }),
 });

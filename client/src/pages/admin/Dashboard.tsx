@@ -75,6 +75,7 @@ export default function AdminDashboard() {
     { path: "/admin/products", icon: ShoppingBag, label: "Cardápio", color: "bg-[#c0392b]/20 text-[#c0392b]" },
     { path: "/admin/categories", icon: Layers, label: "Categorias", color: "bg-[#e67e22]/20 text-[#e67e22]" },
     { path: "/admin/stock", icon: Package, label: "Estoque", color: "bg-[#27ae60]/20 text-[#27ae60]" },
+    { path: "/admin/delivery-zones", icon: Truck, label: "Zonas de Entrega", color: "bg-[#16a085]/20 text-[#16a085]" },
     { path: "/admin/team", icon: Truck, label: "Equipe", color: "bg-[#9b59b6]/20 text-[#9b59b6]" },
     { path: "/admin/reports", icon: BarChart2, label: "Relatórios", color: "bg-[#d4af37]/20 text-[#d4af37]" },
     { path: "/admin/settings", icon: Power, label: "Configurações", color: "bg-[#95a5a6]/20 text-[#95a5a6]" },

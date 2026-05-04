@@ -31,6 +31,7 @@ import AdminStock from "./pages/admin/Stock";
 import AdminTeam from "./pages/admin/Team";
 import AdminReports from "./pages/admin/Reports";
 import CompanySettings from "./pages/admin/CompanySettings";
+import DeliveryZonesAdmin from "./pages/DeliveryZonesAdmin";
 
 function Router() {
   return (
@@ -59,6 +60,7 @@ function Router() {
       <Route path="/admin/team" component={AdminTeam} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/settings" component={CompanySettings} />
+      <Route path="/admin/delivery-zones" component={DeliveryZonesAdmin} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

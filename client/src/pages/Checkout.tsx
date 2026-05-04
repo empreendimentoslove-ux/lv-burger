@@ -21,10 +21,16 @@ export default function Checkout() {
   const [proofPreview, setProofPreview] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [deliveryFee, setDeliveryFee] = useState<string>("0");
+  const [estimatedMinutes, setEstimatedMinutes] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createOrder = trpc.orders.create.useMutation();
   const { data: shopOpen } = trpc.shop.isOpen.useQuery(undefined, { refetchInterval: 3000 });
+  const calculateFee = trpc.deliveryZones.calculateFee.useQuery(
+    { distanceKm: 5 }, // Default 5km, will be updated when address changes
+    { enabled: false }
+  );
 
   const handleGetLocation = async () => {
     setIsLocating(true);
@@ -34,6 +40,10 @@ export default function Checkout() {
       });
       
       const { latitude, longitude } = position.coords;
+      
+      // Calculate distance from restaurant (assuming restaurant at 0,0 for now)
+      // In production, use actual restaurant coordinates
+      const distance = Math.sqrt(latitude * latitude + longitude * longitude) * 111; // Rough km conversion
       
       // Try to reverse geocode using Google Maps Geocoder (if available)
       try {
@@ -48,6 +58,14 @@ export default function Checkout() {
           });
         });
         setAddress(result as string);
+        
+        // Calculate delivery fee based on distance
+        const feeData = await calculateFee.refetch();
+        if (feeData.data) {
+          setDeliveryFee(feeData.data.fee);
+          setEstimatedMinutes(feeData.data.estimatedMinutes);
+        }
+        
         toast.success("Endereço preenchido!");
       } catch (geocodeError) {
         // Fallback: show coordinates if geocoding fails
@@ -110,13 +128,14 @@ export default function Checkout() {
         proofUrl = uploadData.url;
       }
       
+      const total = (parseFloat(totalPrice.toFixed(2)) + parseFloat(deliveryFee)).toFixed(2);
       const order = await createOrder.mutateAsync({
         paymentMethod,
         changeAmount: paymentMethod === "cash" && changeAmount ? changeAmount : undefined,
         deliveryAddress: address,
         subtotal: totalPrice.toFixed(2),
-        deliveryFee: "0",
-        total: totalPrice.toFixed(2),
+        deliveryFee: deliveryFee,
+        total: total,
         proofUrl,
         items: items.map((item) => ({
           productId: item.productId,
@@ -200,11 +219,27 @@ export default function Checkout() {
                   </span>
                 </div>
               ))}
-              <div className="border-t border-[#222] mt-2 pt-2 flex justify-between">
-                <span className="text-white font-semibold text-sm">Total</span>
-                <span className="text-[#d4af37] font-bold">
-                  R$ {totalPrice.toFixed(2).replace(".", ",")}
-                </span>
+              <div className="border-t border-[#222] mt-2 pt-2 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#aaa]">Subtotal</span>
+                  <span className="text-white">R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#aaa]">Taxa de entrega</span>
+                  <span className="text-white">R$ {deliveryFee.replace(".", ",")}</span>
+                </div>
+                {estimatedMinutes > 0 && (
+                  <div className="flex justify-between text-xs text-[#888]">
+                    <span>Tempo estimado</span>
+                    <span>{estimatedMinutes} min</span>
+                  </div>
+                )}
+                <div className="border-t border-[#333] pt-2 flex justify-between">
+                  <span className="text-white font-semibold text-sm">Total</span>
+                  <span className="text-[#d4af37] font-bold">
+                    R$ {(parseFloat(totalPrice.toFixed(2)) + parseFloat(deliveryFee)).toFixed(2).replace(".", ",")}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
