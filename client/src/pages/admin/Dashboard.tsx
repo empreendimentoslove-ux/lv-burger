@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { playNotificationSound, showNotification, requestNotificationPermission } from "@/utils/notificationManager";
 import {
   ShoppingBag, Users, Package, TrendingUp, ChevronRight,
@@ -95,9 +96,12 @@ export default function AdminDashboard() {
             </div>
             <h1 className="font-display text-white text-xl font-bold">Olá, {user?.name?.split(" ")[0]}</h1>
           </div>
-          <button onClick={logout} className="text-[#555]">
-            <LogOut size={20} />
-          </button>
+          <div className="flex items-center gap-4">
+            <NotificationCenter />
+            <button onClick={logout} className="text-[#555]">
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
       </div>
 

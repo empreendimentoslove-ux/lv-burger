@@ -236,3 +236,19 @@ export const deliveryZones = mysqlTable("delivery_zones", {
 
 export type DeliveryZone = typeof deliveryZones.$inferSelect;
 export type InsertDeliveryZone = typeof deliveryZones.$inferInsert;
+
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+export const notifications = mysqlTable("notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // admin user who receives notification
+  orderId: int("orderId").notNull(), // order that triggered notification
+  type: mysqlEnum("type", ["new_order", "order_status_change", "delivery_accepted", "delivery_completed"]).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  message: text("message").notNull(),
+  read: boolean("read").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;

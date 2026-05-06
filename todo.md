@@ -177,3 +177,12 @@
 - [x] Adicionar gradiente de fundo para melhor contraste do botão
 - [x] Remover max-w-md para botão ocupar 100% da largura
 - [x] Adicionar touch-manipulation para melhor UX em mobile
+
+
+## Sistema de Notificações em Tempo Real (v14)
+
+- [ ] Criar tabela de notificações no banco de dados
+- [ ] Implementar WebSocket para notificações em tempo real
+- [ ] Adicionar trigger de notificação ao criar pedido
+- [ ] Criar UI de notificações no painel admin
+- [ ] Testar notificações e validar funcionamento

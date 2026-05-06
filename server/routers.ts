@@ -12,6 +12,7 @@ import {
   confirmDelivery,
   createCategory,
   createDeliveryZone,
+  createNotification,
   createOrder,
   createProduct,
   createPromotion,
@@ -37,6 +38,7 @@ import {
   getDailyReport,
   getDeliveriesByMotoboy,
   getDeliveryByOrderId,
+  getNotifications,
   getOrderById,
   getOrderItems,
   getOrdersByUser,
@@ -48,6 +50,8 @@ import {
   getShopSettings,
   getStockItems,
   isShopOpen,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
   startDeliveryRoute,
   updateCartItem,
   updateCategory,
@@ -254,6 +258,21 @@ export const appRouter = router({
         }
         const order = await createOrder({ ...input, userId: ctx.user.id });
         await clearCart(ctx.user.id);
+        
+        // Send notification to all admins
+        const admins = await getAllUsers();
+        const adminUsers = admins.filter((u) => u.role === "admin");
+        for (const admin of adminUsers) {
+          const totalPrice = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+          await createNotification(
+            admin.id,
+            order.id,
+            "new_order",
+            "🔔 Novo Pedido Recebido!",
+            `Pedido #${order.id} de ${ctx.user.name || "Cliente"} - R$ ${(totalPrice / 100).toFixed(2)}`
+          );
+        }
+        
         return order;
       }),
     myOrders: protectedProcedure.query(({ ctx }) => getOrdersByUser(ctx.user.id)),
@@ -551,6 +570,26 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return await deleteDeliveryZone(input.id);
+      }),
+  }),
+
+  // ─── Notifications ────────────────────────────────────────────────────────────
+  notifications: router({
+    list: protectedProcedure
+      .input(z.object({ unreadOnly: z.boolean().optional() }))
+      .query(async ({ ctx, input }) => {
+        return await getNotifications(ctx.user.id, input.unreadOnly);
+      }),
+    markAsRead: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await markNotificationAsRead(input.id);
+        return { success: true };
+      }),
+    markAllAsRead: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        await markAllNotificationsAsRead(ctx.user.id);
+        return { success: true };
       }),
   }),
 });

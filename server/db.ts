@@ -7,6 +7,7 @@ import {
   deliveries,
   deliveryZones,
   InsertUser,
+  notifications,
   orderItems,
   orders,
   productStock,
@@ -936,4 +937,81 @@ export async function deleteDeliveryZone(id: number) {
   if (!db) return { success: false };
   await db.delete(deliveryZones).where(eq(deliveryZones.id, id));
   return { success: true };
+}
+
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+export async function createNotification(
+  userId: number,
+  orderId: number,
+  type: "new_order" | "order_status_change" | "delivery_accepted" | "delivery_completed",
+  title: string,
+  message: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db.insert(notifications).values({
+      userId,
+      orderId,
+      type,
+      title,
+      message,
+      read: false,
+    });
+    console.log(`[Notifications] Created notification for user ${userId}: ${title}`);
+  } catch (error) {
+    console.error("[Notifications] Error creating notification:", error);
+  }
+}
+
+export async function getNotifications(userId: number, unreadOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    let query = db.select().from(notifications).where(eq(notifications.userId, userId));
+    
+    if (unreadOnly) {
+      query = db
+        .select()
+        .from(notifications)
+        .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+    }
+
+    const result = await query.orderBy(desc(notifications.createdAt)).limit(50);
+    return result;
+  } catch (error) {
+    console.error("[Notifications] Error fetching notifications:", error);
+    return [];
+  }
+}
+
+export async function markNotificationAsRead(notificationId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db
+      .update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.id, notificationId));
+  } catch (error) {
+    console.error("[Notifications] Error marking notification as read:", error);
+  }
+}
+
+export async function markAllNotificationsAsRead(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db
+      .update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.userId, userId));
+  } catch (error) {
+    console.error("[Notifications] Error marking all notifications as read:", error);
+  }
 }
