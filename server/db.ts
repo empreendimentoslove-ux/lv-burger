@@ -21,8 +21,8 @@ import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _lastConnectionAttempt = 0;
-const CONNECTION_RETRY_DELAY = 5000; // 5 seconds
-const MAX_RETRY_ATTEMPTS = 3;
+const CONNECTION_RETRY_DELAY = 5000;
+const MAX_RETRY_ATTEMPTS = 5;
 
 export async function getDb() {
   if (!process.env.DATABASE_URL) {
@@ -56,7 +56,6 @@ export async function getDb() {
   while (attempts < MAX_RETRY_ATTEMPTS) {
     try {
       _db = drizzle(process.env.DATABASE_URL);
-      // Test the connection
       await _db.select().from(users).limit(1);
       console.log("[Database] Successfully connected");
       return _db;
@@ -64,7 +63,9 @@ export async function getDb() {
       attempts++;
       console.warn(`[Database] Connection attempt ${attempts}/${MAX_RETRY_ATTEMPTS} failed:`, error);
       if (attempts < MAX_RETRY_ATTEMPTS) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const backoffDelay = Math.min(1000 * Math.pow(2, attempts - 1), 16000);
+        console.log(`[Database] Retrying in ${backoffDelay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, backoffDelay));
       }
     }
   }

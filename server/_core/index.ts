@@ -148,9 +148,22 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
+  server.setTimeout(120000);
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
+  
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
     console.log(`[Server] Keep-alive timeout: 65s, Headers timeout: 66s`);
+    console.log(`[Server] Server timeout: 120s`);
+  });
+  
+  server.on('error', (error: any) => {
+    console.error('[Server] Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use`);
+      process.exit(1);
+    }
   });
   
   // Graceful shutdown handlers
