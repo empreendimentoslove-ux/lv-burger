@@ -259,19 +259,7 @@ export const appRouter = router({
         const order = await createOrder({ ...input, userId: ctx.user.id });
         await clearCart(ctx.user.id);
         
-        // Send notification to all admins
-        const admins = await getAllUsers();
-        const adminUsers = admins.filter((u) => u.role === "admin");
-        for (const admin of adminUsers) {
-          const totalPrice = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
-          await createNotification(
-            admin.id,
-            order.id,
-            "new_order",
-            "🔔 Novo Pedido Recebido!",
-            `Pedido #${order.id} de ${ctx.user.name || "Cliente"} - R$ ${(totalPrice / 100).toFixed(2)}`
-          );
-        }
+        // TODO: Send notification to all admins (notifications table not created yet)
         
         return order;
       }),

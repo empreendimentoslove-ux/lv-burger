@@ -7,7 +7,7 @@
  */
 
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
-const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const PING_INTERVAL = 30 * 1000; // 30 seconds - ultra-aggressive keep-alive to prevent hibernation
 
 async function ping() {
   try {
@@ -29,8 +29,8 @@ async function ping() {
   }
 }
 
-// Start pinging immediately and then every 5 minutes
-console.log(`[${new Date().toISOString()}] 🚀 Keep-alive service started (pinging every 5 minutes for extra security)`);
+// Start pinging immediately and then every 1 minute
+console.log(`[${new Date().toISOString()}] 🚀 Keep-alive service started (pinging every 1 minute to prevent hibernation)`);
 ping(); // First ping immediately
 setInterval(ping, PING_INTERVAL);
 
