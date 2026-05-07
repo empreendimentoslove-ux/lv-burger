@@ -252,3 +252,23 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+
+// ─── Daily Sales Report ───────────────────────────────────────────────────────
+export const dailySalesReports = mysqlTable("daily_sales_reports", {
+  id: int("id").autoincrement().primaryKey(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+  totalOrders: int("totalOrders").default(0).notNull(),
+  totalRevenue: decimal("totalRevenue", { precision: 12, scale: 2 }).default("0").notNull(),
+  totalDeliveryFees: decimal("totalDeliveryFees", { precision: 12, scale: 2 }).default("0").notNull(),
+  averageOrderValue: decimal("averageOrderValue", { precision: 12, scale: 2 }).default("0").notNull(),
+  paymentMethods: json("paymentMethods").$type<Record<string, number>>().default({}).notNull(), // {cash: 5, pix: 3}
+  orderStatuses: json("orderStatuses").$type<Record<string, number>>().default({}).notNull(), // {delivered: 8, cancelled: 1}
+  topProducts: json("topProducts").$type<Array<{id: number, name: string, quantity: number}>>().default([]).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DailySalesReport = typeof dailySalesReports.$inferSelect;
+export type InsertDailySalesReport = typeof dailySalesReports.$inferInsert;

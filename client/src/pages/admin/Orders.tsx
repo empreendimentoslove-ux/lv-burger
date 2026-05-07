@@ -36,6 +36,21 @@ export default function AdminOrders() {
     onError: (e) => toast.error(e.message),
   });
 
+  const cleanupMutation = trpc.orders.cleanupHistory.useMutation({
+    onSuccess: (result) => {
+      utils.orders.listAll.invalidate();
+      toast.success(`Limpeza concluída! ${result.ordersDeleted} pedidos arquivados.`);
+    },
+    onError: (e) => toast.error("Erro ao limpar histórico: " + e.message),
+  });
+
+  const handleCleanupToday = () => {
+    const today = new Date().toISOString().split('T')[0];
+    if (confirm(`Tem certeza? Isso vai arquivar todos os pedidos anteriores a ${today} e gerar um relatório.`)) {
+      cleanupMutation.mutate({ beforeDate: today });
+    }
+  };
+
   const filtered = (orders ?? []).filter(
     (o) => filterStatus === "all" || o.status === filterStatus
   );
@@ -64,6 +79,13 @@ export default function AdminOrders() {
               {s.label}
             </button>
           ))}
+          <button
+            onClick={handleCleanupToday}
+            disabled={cleanupMutation.isPending}
+            className="flex-shrink-0 ml-auto px-3 py-1 rounded-full text-xs font-medium bg-[#27ae60]/20 text-[#27ae60] hover:bg-[#27ae60]/30 disabled:opacity-50"
+          >
+            {cleanupMutation.isPending ? "Limpando..." : "🗑️ Limpar"}
+          </button>
         </div>
       </div>
 

@@ -64,6 +64,13 @@
       "when": 1778039798926,
       "tag": "0008_solid_gamora",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1778185617540,
+      "tag": "0009_add_daily_sales_reports",
+      "breakpoints": true
     }
   ]
 }

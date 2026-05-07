@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql, sum, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   cartItems,
@@ -1013,5 +1013,139 @@ export async function markAllNotificationsAsRead(userId: number): Promise<void> 
       .where(eq(notifications.userId, userId));
   } catch (error) {
     console.error("[Notifications] Error marking all notifications as read:", error);
+  }
+}
+
+
+// ─── Daily Sales Report & Cleanup ─────────────────────────────────────────────
+export async function generateDailySalesReport(date: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  try {
+    // Get all orders from the specified date
+    const dayOrders = await db
+      .select()
+      .from(orders)
+      .where(sql`DATE(${orders.createdAt}) = ${date}`);
+    
+    if (dayOrders.length === 0) {
+      console.log(`[Report] No orders found for ${date}`);
+      return;
+    }
+
+    // Calculate metrics
+    const totalOrders = dayOrders.length;
+    const totalRevenue = dayOrders.reduce((sum, o) => {
+      const total = typeof o.total === 'string' ? parseFloat(o.total) : o.total;
+      return sum + (total || 0);
+    }, 0);
+    
+    const totalDeliveryFees = dayOrders.reduce((sum, o) => {
+      const fee = typeof o.deliveryFee === 'string' ? parseFloat(o.deliveryFee) : o.deliveryFee;
+      return sum + (fee || 0);
+    }, 0);
+    
+    const averageOrderValue = totalRevenue / totalOrders;
+
+    // Payment methods breakdown
+    const paymentMethods: Record<string, number> = {};
+    dayOrders.forEach(o => {
+      const method = o.paymentMethod || 'unknown';
+      paymentMethods[method] = (paymentMethods[method] || 0) + 1;
+    });
+
+    // Order statuses breakdown
+    const orderStatuses: Record<string, number> = {};
+    dayOrders.forEach(o => {
+      const status = o.status || 'unknown';
+      orderStatuses[status] = (orderStatuses[status] || 0) + 1;
+    });
+
+    // Top products
+    const allOrderItems = await db
+      .select()
+      .from(orderItems)
+      .where(inArray(orderItems.orderId, dayOrders.map(o => o.id)));
+    
+    const productCounts: Record<number, {name: string, quantity: number}> = {};
+    for (const item of allOrderItems) {
+      const product = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+      if (product[0]) {
+        if (!productCounts[item.productId]) {
+          productCounts[item.productId] = {name: product[0].name, quantity: 0};
+        }
+        productCounts[item.productId].quantity += item.quantity || 0;
+      }
+    }
+    
+    const topProducts = Object.entries(productCounts)
+      .map(([id, data]) => ({id: parseInt(id), name: data.name, quantity: data.quantity}))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
+
+    // Save report
+    const { dailySalesReports } = await import("../drizzle/schema");
+    await db.insert(dailySalesReports).values({
+      date,
+      totalOrders,
+      totalRevenue: totalRevenue.toString(),
+      totalDeliveryFees: totalDeliveryFees.toString(),
+      averageOrderValue: averageOrderValue.toString(),
+      paymentMethods,
+      orderStatuses,
+      topProducts,
+    });
+
+    console.log(`[Report] Daily sales report generated for ${date}`);
+  } catch (error) {
+    console.error("[Report] Error generating daily sales report:", error);
+  }
+}
+
+export async function cleanupOldOrders(beforeDate: string): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  try {
+    // Get orders to delete
+    const ordersToDelete = await db
+      .select()
+      .from(orders)
+      .where(sql`DATE(${orders.createdAt}) < ${beforeDate}`);
+
+    if (ordersToDelete.length === 0) {
+      console.log(`[Cleanup] No orders to delete before ${beforeDate}`);
+      return 0;
+    }
+
+    const orderIds = ordersToDelete.map(o => o.id);
+
+    // Delete order items first (foreign key constraint)
+    await db.delete(orderItems).where(inArray(orderItems.orderId, orderIds));
+
+    // Delete orders
+    await db.delete(orders).where(inArray(orders.id, orderIds));
+
+    console.log(`[Cleanup] Deleted ${ordersToDelete.length} orders before ${beforeDate}`);
+    return ordersToDelete.length;
+  } catch (error) {
+    console.error("[Cleanup] Error cleaning up old orders:", error);
+    return 0;
+  }
+}
+
+export async function archiveDayAndCleanup(date: string): Promise<{reportGenerated: boolean, ordersDeleted: number}> {
+  try {
+    // Generate report for the day
+    await generateDailySalesReport(date);
+    
+    // Clean up old orders (keep only today's and future)
+    const ordersDeleted = await cleanupOldOrders(date);
+    
+    return {reportGenerated: true, ordersDeleted};
+  } catch (error) {
+    console.error("[Archive] Error during archive and cleanup:", error);
+    return {reportGenerated: false, ordersDeleted: 0};
   }
 }

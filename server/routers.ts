@@ -65,6 +65,9 @@ import {
   updateStockItem,
   updateUserProfile,
   updateUserRole,
+  archiveDayAndCleanup,
+  generateDailySalesReport,
+  cleanupOldOrders,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -284,6 +287,12 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await updateOrderStatus(input.id, input.status);
         return { success: true };
+      }),
+    cleanupHistory: adminProcedure
+      .input(z.object({ beforeDate: z.string() }))
+      .mutation(async ({ input }) => {
+        const result = await archiveDayAndCleanup(input.beforeDate);
+        return result;
       }),
   }),
 
