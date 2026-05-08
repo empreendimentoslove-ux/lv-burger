@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE `order_items` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`orderId` int NOT NULL,\n\t`productId` int NOT NULL,\n\t`productName` varchar(200) NOT NULL,\n\t`productPrice` decimal(10,2) NOT NULL,\n\t`quantity` int NOT NULL,\n\t`notes` text,\n\t`subtotal` decimal(10,2) NOT NULL,\n\tCONSTRAINT `order_items_id` PRIMARY KEY(`id`)\n)",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 43jnK76S1Rdcxzd.root --database faAWtu22STQMuNwABVCG8Y --execute CREATE TABLE `order_items` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`orderId` int NOT NULL,\n\t`productId` int NOT NULL,\n\t`productName` varchar(200) NOT NULL,\n\t`productPrice` decimal(10,2) NOT NULL,\n\t`quantity` int NOT NULL,\n\t`notes` text,\n\t`subtotal` decimal(10,2) NOT NULL,\n\tCONSTRAINT `order_items_id` PRIMARY KEY(`id`)\n)",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 430
-}

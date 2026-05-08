@@ -1,2 +1,0 @@
-ALTER TABLE `shop_settings` MODIFY COLUMN `operatingDays` varchar(20) NOT NULL DEFAULT '2,3,4,5,6,0';--> statement-breakpoint
-ALTER TABLE `shop_settings` ADD `manualOverride` boolean DEFAULT false NOT NULL;

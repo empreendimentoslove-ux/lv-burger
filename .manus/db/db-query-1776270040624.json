@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO stock_items (name, unit, quantity, minQuantity) VALUES\n('Pão de hambúrguer', 'un', 100, 20),\n('Carne bovina 180g', 'un', 80, 15),\n('Carne wagyu 200g', 'un', 30, 5),\n('Frango empanado', 'un', 50, 10),\n('Hambúrguer veggie', 'un', 30, 5),\n('Queijo cheddar', 'fatia', 200, 30),\n('Bacon', 'g', 2000, 300),\n('Alface', 'folha', 150, 20),\n('Tomate', 'fatia', 200, 30),\n('Coca-Cola 350ml', 'un', 60, 12),\n('Guaraná 350ml', 'un', 40, 8),\n('Suco laranja', 'un', 30, 5),\n('Água mineral', 'un', 50, 10)",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 43jnK76S1Rdcxzd.root --database faAWtu22STQMuNwABVCG8Y --execute INSERT INTO stock_items (name, unit, quantity, minQuantity) VALUES\n('Pão de hambúrguer', 'un', 100, 20),\n('Carne bovina 180g', 'un', 80, 15),\n('Carne wagyu 200g', 'un', 30, 5),\n('Frango empanado', 'un', 50, 10),\n('Hambúrguer veggie', 'un', 30, 5),\n('Queijo cheddar', 'fatia', 200, 30),\n('Bacon', 'g', 2000, 300),\n('Alface', 'folha', 150, 20),\n('Tomate', 'fatia', 200, 30),\n('Coca-Cola 350ml', 'un', 60, 12),\n('Guaraná 350ml', 'un', 40, 8),\n('Suco laranja', 'un', 30, 5),\n('Água mineral', 'un', 50, 10)",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 378
-}
